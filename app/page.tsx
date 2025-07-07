@@ -5,19 +5,29 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { X, ExternalLink, BookOpen, FileText, ZoomIn, ZoomOut, Maximize2, Code } from "lucide-react"
 import mermaid from "mermaid"
+import 'katex/dist/katex.min.css'
+import { InlineMath } from 'react-katex'
+
+interface Paper {
+  title: string
+  authors: string[]
+  year: number
+  url: string
+}
+
+interface Encoding {
+  label: string
+  url: string
+}
 
 interface Node {
   id: string
   label: string
   fullName: string
   shortLabel: string
-  paper: {
-    title: string
-    authors: string[]
-    year: number
-    abstract: string
-    url: string
-  }
+  definition: string
+  papers: Paper[]
+  encodings: Encoding[] | null
 }
 
 interface Edge {
@@ -32,166 +42,222 @@ const argumentationNodes: Node[] = [
     label: "Conflict-free (Cf)",
     fullName: "Conflict-free",
     shortLabel: "Cf",
-    paper: {
-      title:
-        "On the acceptability of arguments and its fundamental role in nonmonotonic reasoning, logic programming and n-person games",
-      authors: ["Dung, P.M."],
-      year: 1995,
-      abstract: "A set of arguments is conflict-free if no argument in the set attacks another argument in the set...",
-      url: "https://www.sciencedirect.com/science/article/pii/000437029400041X",
-    },
-  },
-  {
-    id: "naive",
-    label: "Naive (Nav)",
-    fullName: "Naive",
-    shortLabel: "Nav",
-    paper: {
-      title:
-        "Methods for solving reasoning problems in abstract argumentation–a survey",
-      authors: ["Charwat, G.", "Dvořák, W.", "Gaggl, S. A.", "Wallner, J. P.", "Woltran, S."],
-      year: 2015,
-      abstract: "A comprehensive survey of methods for solving reasoning problems in abstract argumentation frameworks...",
-      url: "https://www.sciencedirect.com/science/article/abs/pii/S0004370214001478",
-    },
+    definition: "A set $S$ of arguments is said to be conflict-free if there are no arguments $A$ and $B$ in $S$ such that $A$ attacks $B$.",
+    papers: [
+      {
+        title: "On the acceptability of arguments and its fundamental role in nonmonotonic reasoning, logic programming and n-person games",
+        authors: ["Dung, P. M."],
+        year: 1995,
+        url: "https://www.sciencedirect.com/science/article/pii/000437029400041X"
+      }
+    ],
+    encodings: null
   },
   {
     id: "admissible",
     label: "Admissible (Adm)",
     fullName: "Admissible",
     shortLabel: "Adm",
-    paper: {
-      title:
-        "On the acceptability of arguments and its fundamental role in nonmonotonic reasoning, logic programming and n-person games",
-      authors: ["Dung, P.M."],
-      year: 1995,
-      abstract: "A conflict-free set of arguments is admissible if it defends all its arguments...",
-      url: "https://www.sciencedirect.com/science/article/pii/000437029400041X",
-    },
-  },
-  {
-    id: "stage",
-    label: "Stage (Stg)",
-    fullName: "Stage",
-    shortLabel: "Stg",
-    paper: {
-      title: "Ideal and stage semantics for argumentation frameworks",
-      authors: ["Verheij, B."],
-      year: 1996,
-      abstract: "Stage semantics selects conflict-free sets that attack a maximal number of arguments...",
-      url: "https://link.springer.com/chapter/10.1007/3-540-61511-3_75",
-    },
+    definition: "(1) An argument $A \\in AR$ is acceptable with respect to a set $S$ of arguments iff for each argument $B \\in AR$: if $B$ attacks $A$ then $B$ is attacked by $S$. (2) A conflict-free set of arguments $S$ is admissible iff each argument in $S$ is acceptable with respect to $S$.",
+    papers: [
+      {
+        title: "On the acceptability of arguments and its fundamental role in nonmonotonic reasoning, logic programming and n-person games",
+        authors: ["Dung, P. M."],
+        year: 1995,
+        url: "https://www.sciencedirect.com/science/article/pii/000437029400041X"
+      }
+    ],
+    encodings: [
+      { label: "DLV & Clingo", url: "https://www.dbai.tuwien.ac.at/research/argumentation/aspartix/dung/adm.dl" }
+    ]
   },
   {
     id: "complete",
     label: "Complete (Cmp)",
     fullName: "Complete",
     shortLabel: "Cmp",
-    paper: {
-      title:
-        "On the acceptability of arguments and its fundamental role in nonmonotonic reasoning, logic programming and n-person games",
-      authors: ["Dung, P.M."],
-      year: 1995,
-      abstract: "A complete extension is an admissible set that contains all arguments it defends...",
-      url: "https://www.sciencedirect.com/science/article/pii/000437029400041X",
-    },
-  },
-  {
-    id: "strongly-admissible",
-    label: "Strongly Admissible (Str)",
-    fullName: "Strongly Admissible",
-    shortLabel: "Str",
-    paper: {
-      title: "Strong admissibility revisited",
-      authors: ["Baroni, P.", "Giacomin, M."],
-      year: 2007,
-      abstract: "Strong admissibility is a refinement of admissibility that requires stronger defense conditions...",
-      url: "https://link.springer.com/chapter/10.1007/978-3-540-74565-5_4",
-    },
-  },
-  {
-    id: "ideal",
-    label: "Ideal (Idl)",
-    fullName: "Ideal",
-    shortLabel: "Idl",
-    paper: {
-      title: "Computing ideal sceptical argumentation",
-      authors: ["Dung, P. M.", "Mancarella, P.", "Toni, F."],
-      year: 2007,
-      abstract: "Computational methods for ideal sceptical argumentation and its relationship to other semantics...",
-      url: "https://www.sciencedirect.com/science/article/abs/pii/S0004370207000644",
-    },
+    definition: "An admissible set $S$ of arguments is called a complete extension iff each argument, which is acceptable with respect to $S$, belongs to $S$.",
+    papers: [
+      {
+        title: "On the acceptability of arguments and its fundamental role in nonmonotonic reasoning, logic programming and n-person games",
+        authors: ["Dung, P. M."],
+        year: 1995,
+        url: "https://www.sciencedirect.com/science/article/pii/000437029400041X"
+      }
+    ],
+    encodings: [
+      { label: "DLV & Clingo", url: "https://www.dbai.tuwien.ac.at/research/argumentation/aspartix/dung/comp.dl" }
+    ]
   },
   {
     id: "grounded",
     label: "Grounded (Grd)",
     fullName: "Grounded",
     shortLabel: "Grd",
-    paper: {
-      title:
-        "On the acceptability of arguments and its fundamental role in nonmonotonic reasoning, logic programming and n-person games",
-      authors: ["Dung, P.M."],
-      year: 1995,
-      abstract: "The grounded extension is the minimal (w.r.t. set inclusion) complete extension...",
-      url: "https://www.sciencedirect.com/science/article/pii/000437029400041X",
-    },
+    definition: "The grounded extension of an argumentation framework $AF$, denoted by $GE_{AF}$, is the least fixed point of $F_{AF}$.",
+    papers: [
+      {
+        title: "On the acceptability of arguments and its fundamental role in nonmonotonic reasoning, logic programming and n-person games",
+        authors: ["Dung, P. M."],
+        year: 1995,
+        url: "https://www.sciencedirect.com/science/article/pii/000437029400041X"
+      }
+    ],
+    encodings: [
+      { label: "DLV & Clingo", url: "https://www.dbai.tuwien.ac.at/research/argumentation/aspartix/dung/ground.dl" }
+    ]
   },
   {
     id: "preferred",
     label: "Preferred (Prf)",
     fullName: "Preferred",
     shortLabel: "Prf",
-    paper: {
-      title:
-        "On the acceptability of arguments and its fundamental role in nonmonotonic reasoning, logic programming and n-person games",
-      authors: ["Dung, P.M."],
-      year: 1995,
-      abstract: "Preferred extensions are maximal complete extensions...",
-      url: "https://www.sciencedirect.com/science/article/pii/000437029400041X",
-    },
+    definition: "A preferred extension of an argumentation framework $AF$ is a maximal (with respect to set inclusion) admissible set of $AF$.",
+    papers: [
+      {
+        title: "On the acceptability of arguments and its fundamental role in nonmonotonic reasoning, logic programming and n-person games",
+        authors: ["Dung, P. M."],
+        year: 1995,
+        url: "https://www.sciencedirect.com/science/article/pii/000437029400041X"
+      }
+    ],
+    encodings: [
+      { label: "DLV", url: "https://www.dbai.tuwien.ac.at/research/argumentation/aspartix/dung/prefexDLV.dl" },
+      { label: "Clingo", url: "https://www.dbai.tuwien.ac.at/research/argumentation/aspartix/dung/prefex_gringo.lp" }
+    ]
   },
   {
     id: "semi-stable",
     label: "Semi-Stable (Sstb)",
     fullName: "Semi-Stable",
     shortLabel: "Sstb",
-    paper: {
-      title: "Semi-stable semantics",
-      authors: ["Caminada, M."],
-      year: 2006,
-      abstract: "Semi-stable extensions are complete extensions with maximal range...",
-      url: "https://link.springer.com/chapter/10.1007/11853886_18",
-    },
+    definition: "Let $(Ar,\\, att)$ be an argumentation framework and $Args \\subseteq Ar$. $Args$ is called a semi-stable extension iff $Args$ is a complete extension where $Args \\cup Args^+$ is maximal.",
+    papers: [
+      {
+        title: "Semi-stable semantics",
+        authors: ["Caminada, M."],
+        year: 2006,
+        url: "https://mysite.cs.cf.ac.uk/CaminadaM/publications/COMMA_semi-stable.pdf"
+      }
+    ],
+    encodings: [
+      { label: "DLV", url: "https://www.dbai.tuwien.ac.at/research/argumentation/aspartix/dung/semi_stable.dl" },
+      { label: "Clingo", url: "https://www.dbai.tuwien.ac.at/research/argumentation/aspartix/dung/semi_stable_gringo.lp" }
+    ]
+  },
+  {
+    id: "ideal",
+    label: "Ideal (Idl)",
+    fullName: "Ideal",
+    shortLabel: "Idl",
+    definition: "A set $X$ of arguments is ideal iff $X$ is admissible and it is contained in every preferred set of arguments.",
+    papers: [
+      {
+        title: "Computing ideal sceptical argumentation",
+        authors: ["Dung, P. M.", "Mancarella, P.", "Toni, F."],
+        year: 2007,
+        url: "https://www.sciencedirect.com/science/article/pii/S000437020700080X"
+      }
+    ],
+    encodings: [
+      { label: "DLV", url: "https://www.dbai.tuwien.ac.at/research/argumentation/aspartix/dung/ideal.dl" }
+    ]
+  },
+  {
+    id: "strongly-admissible",
+    label: "Strongly Admissible (Str)",
+    fullName: "Strongly Admissible",
+    shortLabel: "Str",
+    definition: "Let $(Ar, att)$ be an argumentation framework. $Args \\subseteq Ar$ is strongly admissible iff every $A \\in Args$ is defended by some $Args' \\subseteq Args \\setminus \\{A\\}$ which in its turn is again strongly admissible.",
+    papers: [
+      {
+        title: "Strong admissibility revisited",
+        authors: ["Caminada, M."],
+        year: 2014,
+        url: "https://users.cs.cf.ac.uk/CaminadaM/publications/StrAdmCOMMA14.pdf"
+      }
+    ],
+    encodings: [
+      { label: "Clingo", url: "https://www.dbai.tuwien.ac.at/research/argumentation/aspartix/dung/str_adm.lp" }
+    ]
   },
   {
     id: "eager",
     label: "Eager (Egr)",
     fullName: "Eager",
     shortLabel: "Egr",
-    paper: {
-      title: "Comparing two unique extension semantics for formal argumentation: ideal and eager",
-      authors: ["Caminada, M."],
-      year: 2007,
-      abstract:
-        "A comparison of ideal and eager semantics for formal argumentation frameworks...",
-      url: "https://dspace.library.uu.nl/handle/1874/30000",
-    },
+    definition: "The eager extension is the greatest (w.r.t. set-inclusion) admissible set that is a subset of each semi-stable extension.",
+    papers: [
+      {
+        title: "Comparing two unique extension semantics for formal argumentation: ideal and eager",
+        authors: ["Caminada, M."],
+        year: 2007,
+        url: "https://users.cs.cf.ac.uk/CaminadaM/publications/ideal-eager.pdf"
+      }
+    ],
+    encodings: null
+  },
+  {
+    id: "naive",
+    label: "Naive (Nav)",
+    fullName: "Naive",
+    shortLabel: "Nav",
+    definition: "The simplest notion of acceptability, which in its credulous manifestation we call the naive semantics, requires simply that the initial theory be extended with some maximal set of assumptions which is conflict-free.",
+    papers: [
+      {
+        title: "An abstract, argumentation-theoretic approach to default reasoning",
+        authors: ["Bondarenko, A.", "Dung, P. M.", "Kowalski, R. A.", "Toni, F."],
+        year: 1997,
+        url: "https://www.sciencedirect.com/science/article/pii/S0004370297000155"
+      }
+    ],
+    encodings: [
+      { label: "DLV & Clingo", url: "https://www.dbai.tuwien.ac.at/research/argumentation/aspartix/dung/naive.dl" }
+    ]
   },
   {
     id: "stable",
     label: "Stable (Stb)",
     fullName: "Stable",
     shortLabel: "Stb",
-    paper: {
-      title:
-        "On the acceptability of arguments and its fundamental role in nonmonotonic reasoning, logic programming and n-person games",
-      authors: ["Dung, P.M."],
-      year: 1995,
-      abstract:
-        "A conflict-free set of arguments S is a stable extension iff S attacks every argument not in the set...",
-      url: "https://www.sciencedirect.com/science/article/pii/000437029400041X",
-    },
+    definition: "A conflict-free set of arguments $S$ is called a stable extension iff $S$ attacks each argument which does not belong to $S$.",
+    papers: [
+      {
+        title: "On the acceptability of arguments and its fundamental role in nonmonotonic reasoning, logic programming and n-person games",
+        authors: ["Dung, P. M."],
+        year: 1995,
+        url: "https://www.sciencedirect.com/science/article/pii/000437029400041X"
+      }
+    ],
+    encodings: [
+      { label: "DLV & Clingo", url: "https://www.dbai.tuwien.ac.at/research/argumentation/aspartix/dung/stable.dl" }
+    ]
   },
+  {
+    id: "stage",
+    label: "Stage (Stg)",
+    fullName: "Stage",
+    shortLabel: "Stg",
+    definition: "Let $AF = (A, R)$ be an AF. A set $S$ is a stage (resp. a semi-stable) extension of $AF$, if $S$ is maximal conflict-free (resp. admissible) in $AF$.",
+    papers: [
+      {
+        title: "Two approaches to dialectical argumentation: admissible sets and argumentation stages",
+        authors: ["Verheij, B."],
+        year: 1996,
+        url: "https://www.ai.rug.nl/~verheij/publications/pdf/cd96.pdf"
+      },
+      {
+        title: "Complexity of semi-stable and stage semantics in argumentation frameworks",
+        authors: ["Dvořák, W.", "Woltran, S."],
+        year: 2010,
+        url: "https://www.sciencedirect.com/science/article/pii/S0020019010000864"
+      }
+    ],
+    encodings: [
+      { label: "DLV", url: "https://www.dbai.tuwien.ac.at/research/argumentation/aspartix/dung/stage.dl" },
+      { label: "Clingo", url: "https://www.dbai.tuwien.ac.at/research/argumentation/aspartix/dung/stage_gringo.lp" }
+    ]
+  }
 ]
 
 const argumentationEdges: Edge[] = [
@@ -211,29 +277,36 @@ const argumentationEdges: Edge[] = [
   { source: "eager", target: "admissible", style: "solid" },
 ]
 
-const getDefinition = (nodeId: string): string => {
-  const definitions: Record<string, string> = {
-    "conflict-free": "A set of arguments S is conflict-free iff there are no arguments A, B ∈ S such that A attacks B.",
-    admissible: "A conflict-free set of arguments S is admissible iff S defends every argument in S.",
-    complete:
-      "An admissible set of arguments S is a complete extension iff S contains every argument that is defended by S.",
-    preferred:
-      "A complete extension S is a preferred extension iff S is maximal (w.r.t. set inclusion) among complete extensions.",
-    grounded: "The grounded extension is the minimal (w.r.t. set inclusion) complete extension.",
-    stable:
-      "A conflict-free set of arguments S is a stable extension iff S attacks every argument that does not belong to S.",
-    "semi-stable": "A complete extension S is semi-stable iff S ∪ S⁺ is maximal among complete extensions.",
-    ideal:
-      "The ideal extension is the maximal (w.r.t. set inclusion) admissible set that is contained in every preferred extension.",
-    naive:
-      "A conflict-free set of arguments S is naive iff S is maximal (w.r.t. set inclusion) among conflict-free sets.",
-    stage: "A conflict-free set of arguments S is a stage extension iff S ∪ S⁺ is maximal among conflict-free sets.",
-    eager:
-      "The eager extension is the maximal (w.r.t. set inclusion) complete extension that is contained in every semi-stable extension.",
-    "strongly-admissible":
-      "A conflict-free set S is strongly admissible iff S defends every argument in S against every attack, including indirect attacks.",
+const downloadFile = async (url: string, filename: string) => {
+  try {
+    const response = await fetch(url)
+    if (!response.ok) throw new Error('Network response was not ok')
+    const blob = await response.blob()
+    const downloadUrl = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = downloadUrl
+    link.download = filename
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    window.URL.revokeObjectURL(downloadUrl)
+  } catch (error) {
+    console.error('Download failed:', error)
+    // Fallback: open in new tab
+    window.open(url, '_blank')
   }
-  return definitions[nodeId] || ""
+}
+
+function renderDefinition(def) {
+  // Split on $...$ and alternate between text and math
+  const parts = def.split(/(\$[^$]+\$)/g);
+  return parts.map((part, i) =>
+    part.startsWith('$') && part.endsWith('$') ? (
+      <InlineMath key={i} math={part.slice(1, -1)} />
+    ) : (
+      <span key={i}>{part}</span>
+    )
+  );
 }
 
 export default function MermaidArgumentationGraph() {
@@ -469,21 +542,21 @@ export default function MermaidArgumentationGraph() {
   const selectedNodeData = selectedNode ? argumentationNodes.find((n) => n.id === selectedNode) : null
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
-      <div className="max-w-7xl mx-auto">
-        <div className="mb-6">
+    <div className="h-screen bg-gray-50 p-4">
+      <div className="h-full max-w-full mx-auto">
+        <div className="mb-4">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Argumentation Semantics Explorer</h1>
-          <p className="text-gray-600 mb-4">
+          <p className="text-gray-600">
             Interactive visualization of argumentation framework semantics. Click nodes to explore definitions and
             research papers.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 h-[calc(100vh-120px)]">
           {/* Mermaid Graph Visualization */}
-          <div className="lg:col-span-2">
-            <Card className="relative">
-              <CardContent className="p-4">
+          <div className="lg:col-span-3">
+            <Card className="relative h-full">
+              <CardContent className="p-4 h-full">
                 {/* Zoom Controls */}
                 <div className="absolute top-4 left-4 z-10 flex flex-col gap-2">
                   <Button
@@ -535,11 +608,11 @@ export default function MermaidArgumentationGraph() {
                 )}
 
                 {/* Graph container with legend */}
-                <div className="relative">
-                  {/* Fixed height graph container */}
+                <div className="relative h-full">
+                  {/* Full height graph container */}
                   <div
                     ref={mermaidRef}
-                    className="w-full h-[600px] flex items-center justify-center bg-white rounded-lg overflow-hidden"
+                    className="w-full h-full flex items-center justify-center bg-white rounded-lg overflow-hidden"
                     style={{ fontSize: "14px", cursor: isDragging ? "grabbing" : "grab" }}
                     onMouseDown={handleMouseDown}
                     onMouseMove={handleMouseMove}
@@ -547,9 +620,9 @@ export default function MermaidArgumentationGraph() {
                     onMouseLeave={handleMouseLeave}
                   />
 
-                  {/* Legend inside graph view */}
-                  <div className="absolute bottom-4 left-4 right-4">
-                    <div className="bg-white/95 backdrop-blur-sm border rounded-lg p-3 shadow-sm">
+                  {/* Legend at the very bottom of graph view */}
+                  <div className="absolute bottom-0 left-0 right-0 z-20">
+                    <div className="bg-white/95 backdrop-blur-sm border-t border-gray-200 p-3 shadow-sm rounded-b-lg">
                       <div className="flex items-center justify-center gap-6">
                         <div className="flex items-center gap-2">
                           <div className="w-6 h-0.5 bg-gray-600"></div>
@@ -572,7 +645,7 @@ export default function MermaidArgumentationGraph() {
           </div>
 
           {/* Side Panel */}
-          <div className="space-y-4">
+          <div className="space-y-4 overflow-y-auto">
             {/* Instructions */}
             {!selectedNode && (
               <Card>
@@ -607,36 +680,39 @@ export default function MermaidArgumentationGraph() {
                   <h3 className="font-semibold text-lg mb-2 text-blue-600">
                     {selectedNodeData.fullName} ({selectedNodeData.shortLabel})
                   </h3>
-                  <p className="text-base text-gray-700 mb-4">{getDefinition(selectedNodeData.id)}</p>
+                  <div className="text-base text-gray-700 mb-4">
+                    {renderDefinition(selectedNodeData.definition)}
+                  </div>
                 </CardContent>
               </Card>
             )}
 
             {/* Paper Details for Selected Node */}
-            {selectedNodeData && (
+            {selectedNodeData && selectedNodeData.papers && selectedNodeData.papers.length > 0 && (
               <Card className="border-green-200 bg-green-50/50">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-xl text-green-700">
                     <BookOpen className="w-6 h-6" />
-                    Research Paper
+                    Research Papers
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  <div>
-                    <p className="text-base text-gray-700">
-                      {selectedNodeData.paper.authors.join(", ")}. ({selectedNodeData.paper.year}).{" "}
-                      <i>{selectedNodeData.paper.title}</i>.
-                    </p>
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="flex items-center gap-2 bg-transparent hover:bg-green-100"
-                    onClick={() => window.open(selectedNodeData.paper.url, "_blank")}
-                  >
-                    <ExternalLink className="w-4 h-4" />
-                    View Paper
-                  </Button>
+                  {selectedNodeData.papers.map((paper, idx) => (
+                    <div key={idx} className="mb-2">
+                      <p className="text-base text-gray-700">
+                        {paper.authors.join(", ")}. ({paper.year}). <i>{paper.title}</i>.
+                      </p>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex items-center gap-2 bg-transparent hover:bg-green-100"
+                        onClick={() => window.open(paper.url, "_blank")}
+                      >
+                        <ExternalLink className="w-4 h-4" />
+                        View Paper
+                      </Button>
+                    </div>
+                  ))}
                 </CardContent>
               </Card>
             )}
@@ -650,10 +726,34 @@ export default function MermaidArgumentationGraph() {
                     Encodings
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <p className="text-base text-gray-700">
-                    Computational encodings and algorithms for {selectedNodeData.fullName.toLowerCase()} semantics.
-                  </p>
+                <CardContent className="space-y-3">
+                  {selectedNodeData.encodings && selectedNodeData.encodings.length > 0 ? (
+                    <>
+                      <div className="flex gap-2">
+                        {selectedNodeData.encodings.map((encoding, index) => (
+                          <Button
+                            key={index}
+                            variant="outline"
+                            size="sm"
+                            className="flex items-center gap-2 bg-transparent hover:bg-purple-100 flex-1"
+                            onClick={() => downloadFile(encoding.url, encoding.label.replace(/\s/g, '').toLowerCase() + '.dl')}
+                          >
+                            <ExternalLink className="w-4 h-4" />
+                            {encoding.label}
+                          </Button>
+                        ))}
+                      </div>
+                      <div className="pt-2 border-t border-purple-200">
+                        <p className="text-xs text-purple-600 text-center">
+                          Source: Database and Artificial Intelligence Group at TUWien
+                        </p>
+                      </div>
+                    </>
+                  ) : (
+                    <p className="text-base text-gray-700">
+                      No computational encodings available for {selectedNodeData.fullName.toLowerCase()} semantics.
+                    </p>
+                  )}
                 </CardContent>
               </Card>
             )}
