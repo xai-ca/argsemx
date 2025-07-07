@@ -6,7 +6,7 @@ Interactive web application for visualizing argumentation framework extensions.
 
 ### 1. Setup Conda Environment
 
-```bash
+\`\`\`bash
 # Create conda environment
 conda create -n argsemx python=3.11 nodejs=18
 
@@ -15,11 +15,11 @@ conda activate argsemx
 
 # Install pnpm
 npm install -g pnpm
-```
+\`\`\`
 
 ### 2. Install & Run
 
-```bash
+\`\`\`bash
 # Clone and setup
 git clone <repository-url>
 cd argsemx
@@ -29,7 +29,7 @@ pnpm install
 
 # Start development server
 pnpm dev
-```
+\`\`\`
 
 Visit [http://localhost:3000](http://localhost:3000)
 

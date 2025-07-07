@@ -1,18 +1,16 @@
 "use client"
 
-import { useState, useRef, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { X, ExternalLink, BookOpen, Code, ArrowRight, FileText } from "lucide-react"
+import { X, ExternalLink, BookOpen, FileText, ZoomIn, ZoomOut, Maximize2 } from "lucide-react"
+import mermaid from "mermaid"
 
 interface Node {
   id: string
   label: string
   fullName: string
   shortLabel: string
-  x: number
-  y: number
-  color: string
   paper: {
     title: string
     authors: string[]
@@ -25,43 +23,15 @@ interface Node {
 interface Edge {
   source: string
   target: string
-  label?: string
+  style?: "solid" | "dashed"
 }
-
-const SCALE = 1.4; // Increase this value for more spacing
-const OFFSET_X = 100;
-const OFFSET_Y = 80;
-const SVG_WIDTH = 1400;
-const SVG_HEIGHT = 1100;
-const INIT_VIEWBOX = { x: 0, y: 0, width: SVG_WIDTH, height: SVG_HEIGHT };
 
 const argumentationNodes: Node[] = [
   {
-    id: "naive",
-    label: "Naive (Nav)",
-    fullName: "Naive",
-    shortLabel: "Nav",
-    x: 400 * SCALE + OFFSET_X,
-    y: 50 * SCALE + OFFSET_Y,
-    color: "#e9d5ff",
-    paper: {
-      title:
-        "On the acceptability of arguments and its fundamental role in nonmonotonic reasoning, logic programming and n-person games",
-      authors: ["Dung, P.M."],
-      year: 1995,
-      abstract:
-        "We study the fundamental mechanism, humans use in argumentation, and we explore how this mechanism can be used to formalize nonmonotonic reasoning...",
-      url: "https://www.sciencedirect.com/science/article/pii/000437029400041X",
-    },
-  },
-  {
     id: "conflict-free",
-    label: "Conflict-Free (Cf)",
-    fullName: "Conflict-Free",
+    label: "Conflict-free (Cf)",
+    fullName: "Conflict-free",
     shortLabel: "Cf",
-    x: 200 * SCALE + OFFSET_X,
-    y: 150 * SCALE + OFFSET_Y,
-    color: "#f3f4f6",
     paper: {
       title:
         "On the acceptability of arguments and its fundamental role in nonmonotonic reasoning, logic programming and n-person games",
@@ -72,19 +42,17 @@ const argumentationNodes: Node[] = [
     },
   },
   {
-    id: "stage",
-    label: "Stage (Stg)",
-    fullName: "Stage",
-    shortLabel: "Stg",
-    x: 600 * SCALE + OFFSET_X,
-    y: 150 * SCALE + OFFSET_Y,
-    color: "#bfdbfe",
+    id: "naive",
+    label: "Naive (Nav)",
+    fullName: "Naive",
+    shortLabel: "Nav",
     paper: {
-      title: "Ideal and stage semantics for argumentation frameworks",
-      authors: ["Verheij, B."],
-      year: 1996,
-      abstract: "Stage semantics selects conflict-free sets that attack a maximal number of arguments...",
-      url: "https://link.springer.com/chapter/10.1007/3-540-61511-3_75",
+      title:
+        "On the acceptability of arguments and its fundamental role in nonmonotonic reasoning, logic programming and n-person games",
+      authors: ["Dung, P.M."],
+      year: 1995,
+      abstract: "We study the fundamental mechanism, humans use in argumentation...",
+      url: "https://www.sciencedirect.com/science/article/pii/000437029400041X",
     },
   },
   {
@@ -92,9 +60,6 @@ const argumentationNodes: Node[] = [
     label: "Admissible (Adm)",
     fullName: "Admissible",
     shortLabel: "Adm",
-    x: 200 * SCALE + OFFSET_X,
-    y: 250 * SCALE + OFFSET_Y,
-    color: "#f3f4f6",
     paper: {
       title:
         "On the acceptability of arguments and its fundamental role in nonmonotonic reasoning, logic programming and n-person games",
@@ -105,13 +70,23 @@ const argumentationNodes: Node[] = [
     },
   },
   {
+    id: "stage",
+    label: "Stage (Stg)",
+    fullName: "Stage",
+    shortLabel: "Stg",
+    paper: {
+      title: "Ideal and stage semantics for argumentation frameworks",
+      authors: ["Verheij, B."],
+      year: 1996,
+      abstract: "Stage semantics selects conflict-free sets that attack a maximal number of arguments...",
+      url: "https://link.springer.com/chapter/10.1007/3-540-61511-3_75",
+    },
+  },
+  {
     id: "complete",
     label: "Complete (Cmp)",
     fullName: "Complete",
     shortLabel: "Cmp",
-    x: 200 * SCALE + OFFSET_X,
-    y: 350 * SCALE + OFFSET_Y,
-    color: "#f3f4f6",
     paper: {
       title:
         "On the acceptability of arguments and its fundamental role in nonmonotonic reasoning, logic programming and n-person games",
@@ -122,52 +97,29 @@ const argumentationNodes: Node[] = [
     },
   },
   {
-    id: "ideal",
-    label: "Ideal (Idl)",
-    fullName: "Ideal",
-    shortLabel: "Idl",
-    x: 350 * SCALE + OFFSET_X,
-    y: 350 * SCALE + OFFSET_Y,
-    color: "#bbf7d0",
-    paper: {
-      title: "Ideal and stage semantics for argumentation frameworks",
-      authors: ["Dung, P.M., Mancarella, P., Toni, F."],
-      year: 2007,
-      abstract: "The ideal extension is the maximal admissible set that is contained in every preferred extension...",
-      url: "https://www.sciencedirect.com/science/article/pii/S0004370206001543",
-    },
-  },
-  {
-    id: "eager",
-    label: "Eager (Egr)",
-    fullName: "Eager",
-    shortLabel: "Egr",
-    x: 500 * SCALE + OFFSET_X,
-    y: 350 * SCALE + OFFSET_Y,
-    color: "#bfdbfe",
-    paper: {
-      title: "Eager semantics for argumentation frameworks",
-      authors: ["Caminada, M."],
-      year: 2007,
-      abstract:
-        "Eager semantics is defined as the maximal complete extension that is contained in every semi-stable extension...",
-      url: "https://link.springer.com/chapter/10.1007/978-3-540-74565-5_7",
-    },
-  },
-  {
     id: "strongly-admissible",
     label: "Strongly Admissible (Str)",
     fullName: "Strongly Admissible",
     shortLabel: "Str",
-    x: 650 * SCALE + OFFSET_X,
-    y: 350 * SCALE + OFFSET_Y,
-    color: "#fef3c7",
     paper: {
       title: "Strong admissibility revisited",
-      authors: ["Baroni, P., Giacomin, M."],
+      authors: ["Baroni, P.", "Giacomin, M."],
       year: 2007,
       abstract: "Strong admissibility is a refinement of admissibility that requires stronger defense conditions...",
       url: "https://link.springer.com/chapter/10.1007/978-3-540-74565-5_4",
+    },
+  },
+  {
+    id: "ideal",
+    label: "Ideal (Idl)",
+    fullName: "Ideal",
+    shortLabel: "Idl",
+    paper: {
+      title: "Ideal and stage semantics for argumentation frameworks",
+      authors: ["Dung, P.M.", "Mancarella, P.", "Toni, F."],
+      year: 2007,
+      abstract: "The ideal extension is the maximal admissible set that is contained in every preferred extension...",
+      url: "https://www.sciencedirect.com/science/article/pii/S0004370206001543",
     },
   },
   {
@@ -175,15 +127,12 @@ const argumentationNodes: Node[] = [
     label: "Grounded (Grd)",
     fullName: "Grounded",
     shortLabel: "Grd",
-    x: 100 * SCALE + OFFSET_X,
-    y: 450 * SCALE + OFFSET_Y,
-    color: "#f3f4f6",
     paper: {
       title:
         "On the acceptability of arguments and its fundamental role in nonmonotonic reasoning, logic programming and n-person games",
       authors: ["Dung, P.M."],
       year: 1995,
-      abstract: "The grounded extension is the minimal complete extension...",
+      abstract: "The grounded extension is the minimal (w.r.t. set inclusion) complete extension...",
       url: "https://www.sciencedirect.com/science/article/pii/000437029400041X",
     },
   },
@@ -192,9 +141,6 @@ const argumentationNodes: Node[] = [
     label: "Preferred (Prf)",
     fullName: "Preferred",
     shortLabel: "Prf",
-    x: 300 * SCALE + OFFSET_X,
-    y: 450 * SCALE + OFFSET_Y,
-    color: "#f3f4f6",
     paper: {
       title:
         "On the acceptability of arguments and its fundamental role in nonmonotonic reasoning, logic programming and n-person games",
@@ -209,9 +155,6 @@ const argumentationNodes: Node[] = [
     label: "Semi-Stable (Sstb)",
     fullName: "Semi-Stable",
     shortLabel: "Sstb",
-    x: 400 * SCALE + OFFSET_X,
-    y: 550 * SCALE + OFFSET_Y,
-    color: "#bfdbfe",
     paper: {
       title: "Semi-stable semantics",
       authors: ["Caminada, M."],
@@ -221,271 +164,52 @@ const argumentationNodes: Node[] = [
     },
   },
   {
+    id: "eager",
+    label: "Eager (Egr)",
+    fullName: "Eager",
+    shortLabel: "Egr",
+    paper: {
+      title: "Eager semantics for argumentation frameworks",
+      authors: ["Caminada, M."],
+      year: 2007,
+      abstract:
+        "Eager semantics is defined as the maximal complete extension that is contained in every semi-stable extension...",
+      url: "https://link.springer.com/chapter/10.1007/978-3-540-74565-5_7",
+    },
+  },
+  {
     id: "stable",
     label: "Stable (Stb)",
     fullName: "Stable",
     shortLabel: "Stb",
-    x: 400 * SCALE + OFFSET_X,
-    y: 650 * SCALE + OFFSET_Y,
-    color: "#f3f4f6",
     paper: {
       title:
         "On the acceptability of arguments and its fundamental role in nonmonotonic reasoning, logic programming and n-person games",
       authors: ["Dung, P.M."],
       year: 1995,
-      abstract: "A stable extension is a conflict-free set that attacks every argument not in the set...",
+      abstract:
+        "A conflict-free set of arguments S is a stable extension iff S attacks every argument not in the set...",
       url: "https://www.sciencedirect.com/science/article/pii/000437029400041X",
     },
   },
 ]
 
 const argumentationEdges: Edge[] = [
-  { source: "conflict-free", target: "naive", label: "maximal set respect to ⊆" },
-  { source: "conflict-free", target: "stage", label: "S ∪ S+ is maximal" },
-  { source: "admissible", target: "conflict-free", label: "each node can be defended by the set" },
-  { source: "complete", target: "admissible", label: "a complete of set that every node defend" },
-  { source: "complete", target: "grounded", label: "minimum" },
-  { source: "complete", target: "preferred", label: "maximum" },
-  { source: "complete", target: "ideal", label: "maximum" },
-  { source: "complete", target: "eager", label: "maximum" },
-  { source: "admissible", target: "strongly-admissible", label: "min-max numbering" },
-  { source: "ideal", target: "preferred", label: "maximum" },
-  { source: "eager", target: "strongly-admissible" },
-  { source: "preferred", target: "semi-stable", label: "S ∪ S+ is maximal" },
-  { source: "semi-stable", target: "stable" },
-  { source: "strongly-admissible", target: "semi-stable" },
-  { source: "strongly-admissible", target: "stage" },
+  { source: "naive", target: "conflict-free", style: "solid" },
+  { source: "admissible", target: "conflict-free", style: "solid" },
+  { source: "stage", target: "naive", style: "solid" },
+  { source: "complete", target: "admissible", style: "solid" },
+  { source: "grounded", target: "complete", style: "solid" },
+  { source: "preferred", target: "complete", style: "solid" },
+  { source: "semi-stable", target: "preferred", style: "solid" },
+  { source: "stable", target: "semi-stable", style: "solid" },
+  { source: "ideal", target: "admissible", style: "solid" },
+  { source: "strongly-admissible", target: "admissible", style: "solid" },
+  { source: "stable", target: "stage", style: "solid" },
+  { source: "ideal", target: "preferred", style: "dashed" },
+  { source: "eager", target: "semi-stable", style: "dashed" },
+  { source: "eager", target: "admissible", style: "solid" },
 ]
-
-const minimalExamples: Record<string, string> = {
-  "conflict-free-admissible": `# Conflict-free to Admissible Extension
-# A conflict-free set becomes admissible when it defends all its arguments
-
-class ArgumentationFramework:
-    def __init__(self, arguments, attacks):
-        self.arguments = arguments
-        self.attacks = attacks
-    
-    def is_conflict_free(self, extension):
-        """Check if extension is conflict-free"""
-        for arg1 in extension:
-            for arg2 in extension:
-                if (arg1, arg2) in self.attacks:
-                    return False
-        return True
-    
-    def defends(self, extension, argument):
-        """Check if extension defends argument"""
-        for attacker, target in self.attacks:
-            if target == argument and attacker not in extension:
-                # Check if extension attacks the attacker
-                defended = False
-                for defender in extension:
-                    if (defender, attacker) in self.attacks:
-                        defended = True
-                        break
-                if not defended:
-                    return False
-        return True
-    
-    def is_admissible(self, extension):
-        """Check if extension is admissible"""
-        if not self.is_conflict_free(extension):
-            return False
-        
-        for arg in extension:
-            if not self.defends(extension, arg):
-                return False
-        return True
-
-# Example usage
-af = ArgumentationFramework(
-    arguments=['a', 'b', 'c'],
-    attacks=[('a', 'b'), ('b', 'c'), ('c', 'a')]
-)
-
-print(f"Is {{a}} conflict-free? {af.is_conflict_free({'a'})}")
-print(f"Is {{a}} admissible? {af.is_admissible({'a'})}")`,
-  "admissible-conflict-free": `# Conflict-free to Admissible Extension...`,
-  "complete-preferred": `# Complete to Preferred Extension
-# Preferred extensions are maximal complete extensions
-
-def find_preferred_extensions(af):
-    """Find all preferred extensions (maximal complete extensions)"""
-    complete_extensions = find_complete_extensions(af)
-    preferred = []
-    
-    for ext1 in complete_extensions:
-        is_maximal = True
-        for ext2 in complete_extensions:
-            if ext1 != ext2 and ext1.issubset(ext2):
-                is_maximal = False
-                break
-        if is_maximal:
-            preferred.append(ext1)
-    
-    return preferred
-
-def find_complete_extensions(af):
-    """Find all complete extensions"""
-    complete = []
-    # Generate all possible subsets
-    for subset in powerset(af.arguments):
-        if is_complete(af, subset):
-            complete.append(set(subset))
-    return complete
-
-def is_complete(af, extension):
-    """Check if extension is complete"""
-    if not af.is_admissible(extension):
-        return False
-    
-    # Check if extension contains all arguments it defends
-    for arg in af.arguments:
-        if arg not in extension and af.defends(extension, arg):
-            return False
-    
-    return True
-
-# Example: In a 3-argument cycle, preferred extensions are singletons
-af = ArgumentationFramework(['a', 'b', 'c'], [('a','b'), ('b','c'), ('c','a')])
-preferred = find_preferred_extensions(af)
-print(f"Preferred extensions: {preferred}")  # [{'a'}, {'b'}, {'c'}]`,
-  "preferred-complete": `# Complete to Preferred Extension...`,
-  "complete-grounded": `# Complete to Grounded Extension
-# Grounded extension is the minimal complete extension
-
-def find_grounded_extension(af):
-    """Find the grounded extension (minimal complete extension)"""
-    # Start with empty set
-    grounded = set()
-    changed = True
-    
-    while changed:
-        changed = False
-        # Add all unattacked arguments
-        for arg in af.arguments:
-            if arg not in grounded:
-                is_attacked = False
-                for attacker, target in af.attacks:
-                    if target == arg and attacker not in grounded:
-                        # Check if attacker is attacked by grounded
-                        attacker_defeated = False
-                        for defender in grounded:
-                            if (defender, attacker) in af.attacks:
-                                attacker_defeated = True
-                                break
-                        if not attacker_defeated:
-                            is_attacked = True
-                            break
-                
-                if not is_attacked:
-                    grounded.add(arg)
-                    changed = True
-    
-    return grounded
-
-# Example: Simple case
-af = ArgumentationFramework(['a', 'b'], [('a', 'b')])
-grounded = find_grounded_extension(af)
-print(f"Grounded extension: {grounded}")  # {'a'}`,
-  "grounded-complete": `# Complete to Grounded Extension...`,
-  "complete-ideal": `# Complete to Ideal Extension
-# Ideal extension is maximal admissible contained in all preferred extensions
-
-def find_ideal_extension(af):
-    """Find the ideal extension"""
-    preferred_extensions = find_preferred_extensions(af)
-    
-    if not preferred_extensions:
-        return set()
-    
-    # Find intersection of all preferred extensions
-    intersection = preferred_extensions[0].copy()
-    for pref_ext in preferred_extensions[1:]:
-        intersection = intersection.intersection(pref_ext)
-    
-    # Find maximal admissible subset contained in intersection
-    ideal = set()
-    for subset in powerset(intersection):
-        if af.is_admissible(set(subset)) and len(subset) > len(ideal):
-            ideal = set(subset)
-    
-    return ideal
-
-# Example usage
-af = ArgumentationFramework(['a', 'b', 'c', 'd'], 
-                          [('a', 'b'), ('b', 'a'), ('c', 'd')])
-ideal = find_ideal_extension(af)
-print(f"Ideal extension: {ideal}")`,
-  "ideal-complete": `# Complete to Ideal Extension...`,
-  "conflict-free-naive": `# Conflict-free to Naive Extension
-# Naive extensions are maximal conflict-free sets
-
-def find_naive_extensions(af):
-    """Find all naive extensions (maximal conflict-free sets)"""
-    naive_extensions = []
-    
-    # Generate all conflict-free sets
-    conflict_free_sets = []
-    for subset in powerset(af.arguments):
-        if af.is_conflict_free(set(subset)):
-            conflict_free_sets.append(set(subset))
-    
-    # Find maximal ones
-    for cf_set in conflict_free_sets:
-        is_maximal = True
-        for other_set in conflict_free_sets:
-            if cf_set != other_set and cf_set.issubset(other_set):
-                is_maximal = False
-                break
-        if is_maximal:
-            naive_extensions.append(cf_set)
-    
-    return naive_extensions
-
-# Example: In a symmetric attack, naive extensions are singletons
-af = ArgumentationFramework(['a', 'b'], [('a', 'b'), ('b', 'a')])
-naive = find_naive_extensions(af)
-print(f"Naive extensions: {naive}")  # [{'a'}, {'b'}]`,
-  "naive-conflict-free": `# Conflict-free to Naive Extension...`,
-  "conflict-free-stage": `# Conflict-free to Stage Extension
-# Stage extensions maximize the range (attacked arguments)
-
-def find_stage_extensions(af):
-    """Find all stage extensions"""
-    stage_extensions = []
-    conflict_free_sets = []
-    
-    # Generate all conflict-free sets
-    for subset in powerset(af.arguments):
-        if af.is_conflict_free(set(subset)):
-            conflict_free_sets.append(set(subset))
-    
-    # Calculate range for each conflict-free set
-    max_range_size = 0
-    for cf_set in conflict_free_sets:
-        range_set = cf_set.copy()
-        # Add all arguments attacked by cf_set
-        for arg in cf_set:
-            for attacker, target in af.attacks:
-                if attacker == arg:
-                    range_set.add(target)
-        
-        if len(range_set) > max_range_size:
-            max_range_size = len(range_set)
-            stage_extensions = [cf_set]
-        elif len(range_set) == max_range_size:
-            stage_extensions.append(cf_set)
-    
-    return stage_extensions
-
-# Example usage
-af = ArgumentationFramework(['a', 'b', 'c'], [('a', 'b'), ('b', 'c')])
-stage = find_stage_extensions(af)
-print(f"Stage extensions: {stage}")`,
-  "stage-conflict-free": `# Conflict-free to Stage Extension...`,
-}
 
 const getDefinition = (nodeId: string): string => {
   const definitions: Record<string, string> = {
@@ -512,331 +236,376 @@ const getDefinition = (nodeId: string): string => {
   return definitions[nodeId] || ""
 }
 
-export default function InteractiveGraph() {
+export default function MermaidArgumentationGraph() {
   const [selectedNode, setSelectedNode] = useState<string | null>(null)
-  const [selectedEdge, setSelectedEdge] = useState<Edge | null>(null)
-  const svgRef = useRef<SVGSVGElement>(null)
+  const [hoveredNode, setHoveredNode] = useState<string | null>(null)
+  const mermaidRef = useRef<HTMLDivElement>(null)
+  const [zoomLevel, setZoomLevel] = useState(1)
 
-  // Zoom and pan state
-  const [viewBox, setViewBox] = useState(INIT_VIEWBOX)
-  const [isPanning, setIsPanning] = useState(false)
-  const panStart = useRef<{ x: number; y: number } | null>(null)
-  const viewBoxStart = useRef<{ x: number; y: number; width: number; height: number }>(INIT_VIEWBOX)
+  // Generate Mermaid diagram syntax
+  const generateMermaidDiagram = () => {
+    let diagram = `graph BT\n`
 
-  // Fit graph to view on mount
-  useEffect(() => {
-    setViewBox(INIT_VIEWBOX)
-  }, [])
+    // Add node definitions with clear labels - using quotes to ensure text shows
+    argumentationNodes.forEach((node) => {
+      const nodeId = node.id.replace(/-/g, "_")
+      // Use double quotes and escape any internal quotes
+      const label = node.label.replace(/"/g, '\\"')
+      diagram += `    ${nodeId}["${label}"]\n`
+    })
 
-  // Mouse wheel for zoom
-  const handleWheel = (e: React.WheelEvent<SVGSVGElement>) => {
-    e.preventDefault()
-    const scaleAmount = 1.1
-    let { x, y, width, height } = viewBox
-    const svgRect = svgRef.current?.getBoundingClientRect()
-    if (!svgRect) return
-    // Mouse position relative to SVG
-    const mouseX = e.clientX - svgRect.left
-    const mouseY = e.clientY - svgRect.top
-    const svgX = x + (mouseX / svgRect.width) * width
-    const svgY = y + (mouseY / svgRect.height) * height
-    // Zoom in or out
-    if (e.deltaY < 0) {
-      // Zoom in
-      width /= scaleAmount
-      height /= scaleAmount
-      x = svgX - ((svgX - x) / scaleAmount)
-      y = svgY - ((svgY - y) / scaleAmount)
-    } else {
-      // Zoom out
-      width *= scaleAmount
-      height *= scaleAmount
-      x = svgX - ((svgX - x) * scaleAmount)
-      y = svgY - ((svgY - y) * scaleAmount)
+    diagram += `\n`
+
+    // Add edges
+    argumentationEdges.forEach((edge) => {
+      const sourceId = edge.source.replace(/-/g, "_")
+      const targetId = edge.target.replace(/-/g, "_")
+
+      if (edge.style === "dashed") {
+        diagram += `    ${sourceId} -.-> ${targetId}\n`
+      } else {
+        diagram += `    ${sourceId} --> ${targetId}\n`
+      }
+    })
+
+    // Add styling - ensure text is visible
+    diagram += `\n    %% Styling\n`
+    argumentationNodes.forEach((node, index) => {
+      const nodeId = node.id.replace(/-/g, "_")
+      const isSelected = selectedNode === node.id
+      const isHovered = hoveredNode === node.id
+
+      let fillColor = "#ffffff"
+      let strokeColor = "#333333"
+      let strokeWidth = "2px"
+      const textColor = "#000000"
+
+      if (isSelected) {
+        strokeColor = "#3b82f6"
+        strokeWidth = "3px"
+      } else if (isHovered) {
+        fillColor = "#f8fafc"
+        strokeColor = "#6366f1"
+        strokeWidth = "2px"
+      }
+
+      diagram += `    classDef node${index} fill:${fillColor},stroke:${strokeColor},stroke-width:${strokeWidth},color:${textColor},cursor:pointer\n`
+      diagram += `    class ${nodeId} node${index}\n`
+    })
+
+    return diagram
+  }
+
+  const handleZoomIn = () => {
+    const newZoom = Math.min(zoomLevel * 1.2, 3)
+    setZoomLevel(newZoom)
+    applyZoom(newZoom)
+  }
+
+  const handleZoomOut = () => {
+    const newZoom = Math.max(zoomLevel / 1.2, 0.3)
+    setZoomLevel(newZoom)
+    applyZoom(newZoom)
+  }
+
+  const handleFitToWindow = () => {
+    setZoomLevel(1)
+    applyZoom(1)
+  }
+
+  const applyZoom = (zoom: number) => {
+    if (mermaidRef.current) {
+      const svg = mermaidRef.current.querySelector("svg")
+      if (svg) {
+        const g = svg.querySelector("g")
+        if (g) {
+          g.style.transform = `scale(${zoom})`
+          g.style.transformOrigin = "center center"
+        }
+      }
     }
-    setViewBox({ x, y, width, height })
   }
 
-  // Mouse down for pan
-  const handleMouseDown = (e: React.MouseEvent<SVGSVGElement>) => {
-    setIsPanning(true)
-    panStart.current = { x: e.clientX, y: e.clientY }
-    viewBoxStart.current = { ...viewBox }
-  }
-  // Mouse move for pan
-  const handleMouseMove = (e: React.MouseEvent<SVGSVGElement>) => {
-    if (!isPanning || !panStart.current) return
-    const dx = ((e.clientX - panStart.current.x) / (svgRef.current?.clientWidth || 1)) * viewBox.width
-    const dy = ((e.clientY - panStart.current.y) / (svgRef.current?.clientHeight || 1)) * viewBox.height
-    setViewBox((prev) => ({ ...prev, x: viewBoxStart.current.x - dx, y: viewBoxStart.current.y - dy }))
-  }
-  // Mouse up to stop pan
-  const handleMouseUp = () => {
-    setIsPanning(false)
-    panStart.current = null
-  }
-  // Mouse leave to stop pan
-  const handleMouseLeave = () => {
-    setIsPanning(false)
-    panStart.current = null
+  const setupNodeInteractions = () => {
+    if (!mermaidRef.current) return
+
+    // Find all node elements using multiple selectors
+    const nodeSelectors = [".node", ".nodeLabel", '[id*="flowchart-"]', "g.node"]
+    let nodeElements: Element[] = []
+
+    nodeSelectors.forEach((selector) => {
+      const elements = Array.from(mermaidRef.current?.querySelectorAll(selector) || [])
+      nodeElements = [...nodeElements, ...elements]
+    })
+
+    // Remove duplicates
+    nodeElements = nodeElements.filter((elem, index, self) => index === self.findIndex((e) => e === elem))
+
+    console.log("Found node elements:", nodeElements.length)
+
+    nodeElements.forEach((nodeElement, index) => {
+      if (index >= argumentationNodes.length) return
+
+      const nodeData = argumentationNodes[index]
+      if (!nodeData) return
+
+      // Remove existing event listeners by cloning
+      const newNodeElement = nodeElement.cloneNode(true) as Element
+      nodeElement.parentNode?.replaceChild(newNodeElement, nodeElement)
+
+      // Add click handler
+      newNodeElement.addEventListener("click", (e) => {
+        e.preventDefault()
+        e.stopPropagation()
+        setSelectedNode(nodeData.id)
+        console.log("Node clicked:", nodeData.id)
+      })
+
+      // Add hover handlers
+      newNodeElement.addEventListener("mouseenter", () => {
+        setHoveredNode(nodeData.id)
+        ;(newNodeElement as HTMLElement).style.cursor = "pointer"
+      })
+
+      newNodeElement.addEventListener("mouseleave", () => {
+        setHoveredNode(null)
+      })
+
+      // Make sure the element is clickable
+      ;(newNodeElement as HTMLElement).style.cursor = "pointer"
+      ;(newNodeElement as HTMLElement).style.pointerEvents = "all"
+    })
   }
 
-  const handleNodeClick = (node: Node) => {
-    setSelectedNode(node.id)
-    setSelectedEdge(null)
-  }
+  useEffect(() => {
+    // Initialize Mermaid with better configuration
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: "default",
+      themeVariables: {
+        primaryColor: "#ffffff",
+        primaryTextColor: "#000000",
+        primaryBorderColor: "#333333",
+        lineColor: "#333333",
+        secondaryColor: "#ffffff",
+        tertiaryColor: "#ffffff",
+        background: "#ffffff",
+        mainBkg: "#ffffff",
+        secondBkg: "#ffffff",
+        tertiaryBkg: "#ffffff",
+      },
+      flowchart: {
+        useMaxWidth: false,
+        htmlLabels: true,
+        curve: "basis",
+        padding: 20,
+      },
+      fontFamily: "Arial, sans-serif",
+      fontSize: "14px",
+    })
 
-  const handleEdgeClick = (edge: Edge) => {
-    setSelectedEdge(edge)
-    setSelectedNode(null)
-  }
+    if (mermaidRef.current) {
+      const diagramDefinition = generateMermaidDiagram()
+      console.log("Diagram definition:", diagramDefinition)
+
+      // Clear previous content
+      mermaidRef.current.innerHTML = ""
+
+      // Render the diagram
+      mermaid
+        .render("mermaid-diagram", diagramDefinition)
+        .then(({ svg }) => {
+          if (mermaidRef.current) {
+            mermaidRef.current.innerHTML = svg
+
+            // Setup interactions after a short delay to ensure DOM is ready
+            setTimeout(() => {
+              setupNodeInteractions()
+              applyZoom(zoomLevel)
+            }, 200)
+          }
+        })
+        .catch((error) => {
+          console.error("Error rendering Mermaid diagram:", error)
+        })
+    }
+  }, [selectedNode, hoveredNode])
 
   const clearSelection = () => {
     setSelectedNode(null)
-    setSelectedEdge(null)
   }
 
   const selectedNodeData = selectedNode ? argumentationNodes.find((n) => n.id === selectedNode) : null
-  const selectedEdgeNodes = selectedEdge
-    ? {
-      source: argumentationNodes.find((n) => n.id === selectedEdge.source),
-      target: argumentationNodes.find((n) => n.id === selectedEdge.target),
-    }
-    : null
-
-  const edgeExample = selectedEdge
-    ? minimalExamples[`${selectedEdge.source}-${selectedEdge.target}`] ||
-    minimalExamples[`${selectedEdge.target}-${selectedEdge.source}`]
-    : null
 
   return (
     <div className="min-h-screen bg-gray-50 p-4">
       <div className="max-w-7xl mx-auto">
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Argumentation Semantics Graph</h1>
-          <p className="text-gray-600">Click nodes to view definitions and papers, click edges to see relationships</p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Argumentation Semantics Explorer</h1>
+          <p className="text-gray-600 mb-4">
+            Interactive visualization of argumentation framework semantics. Click nodes to explore definitions and
+            research papers.
+          </p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Graph Visualization */}
+          {/* Mermaid Graph Visualization */}
           <div className="lg:col-span-2">
-            <Card className="h-[750px] relative">
-              <CardContent className="p-0 h-full">
+            <Card className="relative">
+              <CardContent className="p-4">
+                {/* Zoom Controls */}
+                <div className="absolute top-4 left-4 z-10 flex flex-col gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleZoomIn}
+                    className="bg-white/90 backdrop-blur-sm border shadow-sm hover:bg-white"
+                    title="Zoom In"
+                  >
+                    <ZoomIn className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleZoomOut}
+                    className="bg-white/90 backdrop-blur-sm border shadow-sm hover:bg-white"
+                    title="Zoom Out"
+                  >
+                    <ZoomOut className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleFitToWindow}
+                    className="bg-white/90 backdrop-blur-sm border shadow-sm hover:bg-white"
+                    title="Fit to Window"
+                  >
+                    <Maximize2 className="w-4 h-4" />
+                  </Button>
+                </div>
+
+                {/* Zoom Level Indicator */}
+                <div className="absolute top-4 left-20 z-10">
+                  <div className="bg-white/90 backdrop-blur-sm border shadow-sm rounded px-2 py-1 text-xs font-medium">
+                    {Math.round(zoomLevel * 100)}%
+                  </div>
+                </div>
+
                 {/* Clear Selection Button */}
-                {(selectedNode || selectedEdge) && (
+                {selectedNode && (
                   <Button
                     variant="outline"
                     onClick={clearSelection}
-                    className="absolute top-4 right-4 z-10 flex items-center gap-2 bg-white/90 backdrop-blur-sm border shadow-sm"
+                    className="absolute top-4 right-4 z-10 flex items-center gap-2 bg-white/90 backdrop-blur-sm border shadow-sm hover:bg-white"
                   >
                     <X className="w-4 h-4" />
                     Clear Selection
                   </Button>
                 )}
 
-                <svg
-                  ref={svgRef}
-                  width="100%"
-                  height="100%"
-                  viewBox={`${viewBox.x} ${viewBox.y} ${viewBox.width} ${viewBox.height}`}
-                  className="border rounded-lg"
-                  style={{ cursor: isPanning ? 'grabbing' : 'grab', userSelect: 'none' }}
-                  onWheel={handleWheel}
-                  onMouseDown={handleMouseDown}
-                  onMouseMove={handleMouseMove}
-                  onMouseUp={handleMouseUp}
-                  onMouseLeave={handleMouseLeave}
-                >
-                  {/* Edges */}
-                  {argumentationEdges.map((edge, index) => {
-                    const sourceNode = argumentationNodes.find((n) => n.id === edge.source)
-                    const targetNode = argumentationNodes.find((n) => n.id === edge.target)
-                    if (!sourceNode || !targetNode) return null
-
-                    const isSelected = selectedEdge?.source === edge.source && selectedEdge?.target === edge.target
-
-                    return (
-                      <g key={index}>
-                        <line
-                          x1={sourceNode.x}
-                          y1={sourceNode.y}
-                          x2={targetNode.x}
-                          y2={targetNode.y}
-                          stroke={isSelected ? "#3b82f6" : "#64748b"}
-                          strokeWidth={isSelected ? "3" : "2"}
-                          markerEnd={isSelected ? "url(#arrowhead-selected)" : "url(#arrowhead)"}
-                          className="cursor-pointer hover:stroke-blue-400 transition-colors"
-                          onClick={() => handleEdgeClick(edge)}
-                        />
-                        {edge.label && (
-                          <text
-                            x={(sourceNode.x + targetNode.x) / 2}
-                            y={(sourceNode.y + targetNode.y) / 2 - 8}
-                            textAnchor="middle"
-                            className="text-xs fill-gray-600 font-medium pointer-events-none"
-                            style={{ fontSize: "10px" }}
-                          >
-                            {edge.label}
-                          </text>
-                        )}
-                      </g>
-                    )
-                  })}
-
-                  {/* Arrow marker */}
-                  <defs>
-                    <marker
-                      id="arrowhead"
-                      markerWidth="10"
-                      markerHeight="10"
-                      refX="8"
-                      refY="5"
-                      orient="auto"
-                      markerUnits="userSpaceOnUse"
-                    >
-                      <polygon points="0 2, 8 5, 0 8" fill="#64748b" stroke="#64748b" strokeWidth="1" />
-                    </marker>
-                    <marker
-                      id="arrowhead-selected"
-                      markerWidth="10"
-                      markerHeight="10"
-                      refX="8"
-                      refY="5"
-                      orient="auto"
-                      markerUnits="userSpaceOnUse"
-                    >
-                      <polygon points="0 2, 8 5, 0 8" fill="#3b82f6" stroke="#3b82f6" strokeWidth="1" />
-                    </marker>
-                  </defs>
-
-                  {/* Nodes */}
-                  {argumentationNodes.map((node) => (
-                    <g key={node.id}>
-                      <rect
-                        x={node.x - 70}
-                        y={node.y - 30}
-                        width="140"
-                        height="60"
-                        rx="8"
-                        fill={selectedNode === node.id ? "#3b82f6" : node.color}
-                        stroke={selectedNode === node.id ? "#1d4ed8" : "#94a3b8"}
-                        strokeWidth="2"
-                        className="cursor-pointer hover:stroke-blue-400 transition-colors"
-                        onClick={() => handleNodeClick(node)}
-                      />
-                      <text
-                        x={node.x}
-                        y={node.y - 8}
-                        textAnchor="middle"
-                        dominantBaseline="middle"
-                        className="text-xs font-semibold pointer-events-none"
-                        fill={selectedNode === node.id ? "#ffffff" : "#374151"}
-                        style={{ fontSize: "11px" }}
-                      >
-                        {node.fullName}
-                      </text>
-                      <text
-                        x={node.x}
-                        y={node.y + 8}
-                        textAnchor="middle"
-                        dominantBaseline="middle"
-                        className="text-xs pointer-events-none"
-                        fill={selectedNode === node.id ? "#ffffff" : "#6b7280"}
-                        style={{ fontSize: "10px" }}
-                      >
-                        ({node.shortLabel})
-                      </text>
-                    </g>
-                  ))}
-                </svg>
+                {/* Fixed height graph container */}
+                <div
+                  ref={mermaidRef}
+                  className="w-full h-[600px] flex items-center justify-center bg-white rounded-lg border overflow-hidden"
+                  style={{ fontSize: "14px" }}
+                />
               </CardContent>
+
+              {/* Legend below the graph */}
+              <div className="px-4 pb-4">
+                <div className="bg-gray-50 border rounded-lg p-4">
+                  <h4 className="font-semibold text-sm text-gray-700 mb-3">Legend</h4>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="flex items-center gap-2">
+                      <div className="w-6 h-0.5 bg-gray-600"></div>
+                      <span className="text-sm text-gray-600">Direct inclusion</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-6 h-0.5 bg-gray-400 border-dashed border-t-2 border-gray-400"></div>
+                      <span className="text-sm text-gray-600">Special relationship</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-6 h-4 bg-white rounded border-2 border-blue-500"></div>
+                      <span className="text-sm text-gray-600">Selected node</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-6 h-4 bg-slate-50 rounded border-2 border-indigo-400"></div>
+                      <span className="text-sm text-gray-600">Hovered node</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </Card>
           </div>
 
           {/* Side Panel */}
           <div className="space-y-4">
-            {/* Definition Box for Single Node */}
-            {selectedNodeData && (
+            {/* Instructions */}
+            {!selectedNode && (
               <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-xl">
+                  <CardTitle className="text-lg">How to Use</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  <p className="text-sm text-gray-600">
+                    • <strong>Click</strong> any node to view its definition and research paper
+                  </p>
+                  <p className="text-sm text-gray-600">
+                    • <strong>Hover</strong> over nodes to see visual feedback
+                  </p>
+                  <p className="text-sm text-gray-600">
+                    • Use <strong>zoom controls</strong> to navigate the diagram
+                  </p>
+                  <p className="text-sm text-gray-600">
+                    • <strong>Arrows</strong> show semantic relationships
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Definition Box for Selected Node */}
+            {selectedNodeData && (
+              <Card className="border-blue-200 bg-blue-50/50">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-xl text-blue-700">
                     <FileText className="w-6 h-6" />
                     Definition
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-base text-gray-700">{getDefinition(selectedNodeData.id)}</p>
+                  <h3 className="font-semibold text-lg mb-2 text-blue-600">
+                    {selectedNodeData.fullName} ({selectedNodeData.shortLabel})
+                  </h3>
+                  <p className="text-base text-gray-700 mb-4">{getDefinition(selectedNodeData.id)}</p>
                 </CardContent>
               </Card>
             )}
 
-            {/* Definitions for Edge Selection */}
-            {selectedEdgeNodes && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-lg">
-                    <ArrowRight className="w-5 h-5" />
-                    Relationship Definitions
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <h4 className="font-semibold text-sm text-blue-600 mb-1">
-                      {selectedEdgeNodes.source?.fullName} ({selectedEdgeNodes.source?.shortLabel})
-                    </h4>
-                    <p className="text-sm text-gray-700">{getDefinition(selectedEdgeNodes.source?.id || "")}</p>
-                  </div>
-                  <div className="border-t pt-3">
-                    <h4 className="font-semibold text-sm text-green-600 mb-1">
-                      {selectedEdgeNodes.target?.fullName} ({selectedEdgeNodes.target?.shortLabel})
-                    </h4>
-                    <p className="text-sm text-gray-700">{getDefinition(selectedEdgeNodes.target?.id || "")}</p>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Paper Details for Single Node */}
+            {/* Paper Details for Selected Node */}
             {selectedNodeData && (
-              <Card>
+              <Card className="border-green-200 bg-green-50/50">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-xl">
+                  <CardTitle className="flex items-center gap-2 text-xl text-green-700">
                     <BookOpen className="w-6 h-6" />
-                    Paper Details
+                    Research Paper
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <div>
                     <p className="text-base text-gray-700">
-                      {selectedNodeData.paper.authors.join(", ")}. ({selectedNodeData.paper.year}). <i>{selectedNodeData.paper.title}</i>.
+                      {selectedNodeData.paper.authors.join(", ")}. ({selectedNodeData.paper.year}).{" "}
+                      <i>{selectedNodeData.paper.title}</i>.
                     </p>
                   </div>
                   <Button
                     variant="outline"
                     size="sm"
-                    className="flex items-center gap-2 bg-transparent"
+                    className="flex items-center gap-2 bg-transparent hover:bg-green-100"
                     onClick={() => window.open(selectedNodeData.paper.url, "_blank")}
                   >
                     <ExternalLink className="w-4 h-4" />
                     View Paper
                   </Button>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Minimal Example for Edge */}
-            {edgeExample && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Code className="w-5 h-5" />
-                    Minimal Example
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <pre className="text-xs bg-gray-100 p-3 rounded-md overflow-x-auto">
-                    <code>{edgeExample}</code>
-                  </pre>
                 </CardContent>
               </Card>
             )}
