@@ -1,47 +1,35 @@
-# Argumentation Framework Visualization
+# ArgSemX
 
-Interactive web application for visualizing argumentation framework extensions.
+[![GitHub Repo](https://img.shields.io/badge/GitHub-argsemx-181717?logo=github)](https://github.com/yilinxia/argsemx)
+
+ArgSemX (Argumentation Semantics Explorer), an interactive web app for exploring argumentation framework semantics.
 
 ## Quick Start
 
-### 1. Setup Conda Environment
-
-\`\`\`bash
-# Create conda environment
-conda create -n argsemx python=3.11 nodejs=18
-
-# Activate environment
-conda activate argsemx
-
-# Install pnpm
-npm install -g pnpm
-\`\`\`
-
-### 2. Install & Run
-
-\`\`\`bash
-# Clone and setup
-git clone <repository-url>
-cd argsemx
+```bash
+# Clone the repository
+ git clone https://github.com/yilinxia/argsemx.git
+ cd argsemx
 
 # Install dependencies
 pnpm install
 
-# Start development server
+# Start the development server
 pnpm dev
-\`\`\`
+```
 
-Visit [http://localhost:3000](http://localhost:3000)
-
-## Available Commands
-
-- `pnpm dev` - Development server with hot reload
-- `pnpm build` - Production build
-- `pnpm start` - Production server
+Visit [http://localhost:3000](http://localhost:3000) in your browser.
 
 ## Tech Stack
-
-- Next.js 15 + React 19
+- Next.js 15 / React 19
 - TypeScript
 - Tailwind CSS
-- shadcn/ui components
+- shadcn/ui
+
+## License
+
+[MIT](./LICENSE)
+
+---
+
+For question, please [create issue](https://github.com/yilinxia/argsemx/issues).
