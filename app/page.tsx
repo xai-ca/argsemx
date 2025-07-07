@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { X, ExternalLink, BookOpen, FileText, ZoomIn, ZoomOut, Maximize2, Code } from "lucide-react"
+import { X, ExternalLink, BookOpen, FileText, ZoomIn, ZoomOut, Maximize2, Code, Github } from "lucide-react"
 import mermaid from "mermaid"
 import 'katex/dist/katex.min.css'
 import { InlineMath } from 'react-katex'
@@ -544,13 +544,23 @@ export default function MermaidArgumentationGraph() {
   return (
     <div className="h-screen bg-gray-50 p-4">
       <div className="h-full max-w-full mx-auto">
-        <div className="mb-4">
+        <div className="mb-4 flex items-center gap-3">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Argumentation Semantics Explorer</h1>
-          <p className="text-gray-600">
-            Interactive visualization of argumentation framework semantics. Click nodes to explore definitions and
-            research papers.
-          </p>
+          <a
+            href="https://github.com/yilinxia/argsemx"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center px-4 py-1.5 rounded-full border border-gray-300 bg-gray-100 text-gray-900 text-base font-medium shadow-sm transition hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400 mb-2"
+            title="View on GitHub"
+          >
+            <Github className="w-5 h-5 mr-2" />
+            <span>GitHub</span>
+          </a>
         </div>
+        <p className="text-gray-600">
+          Interactive visualization of argumentation framework semantics. Click nodes to explore definitions and
+          research papers.
+        </p>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 h-[calc(100vh-120px)]">
           {/* Mermaid Graph Visualization */}
