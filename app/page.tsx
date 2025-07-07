@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { X, ExternalLink, BookOpen, FileText, ZoomIn, ZoomOut, Maximize2 } from "lucide-react"
+import { X, ExternalLink, BookOpen, FileText, ZoomIn, ZoomOut, Maximize2, Code } from "lucide-react"
 import mermaid from "mermaid"
 
 interface Node {
@@ -48,11 +48,11 @@ const argumentationNodes: Node[] = [
     shortLabel: "Nav",
     paper: {
       title:
-        "On the acceptability of arguments and its fundamental role in nonmonotonic reasoning, logic programming and n-person games",
-      authors: ["Dung, P.M."],
-      year: 1995,
-      abstract: "We study the fundamental mechanism, humans use in argumentation...",
-      url: "https://www.sciencedirect.com/science/article/pii/000437029400041X",
+        "Methods for solving reasoning problems in abstract argumentation–a survey",
+      authors: ["Charwat, G.", "Dvořák, W.", "Gaggl, S. A.", "Wallner, J. P.", "Woltran, S."],
+      year: 2015,
+      abstract: "A comprehensive survey of methods for solving reasoning problems in abstract argumentation frameworks...",
+      url: "https://www.sciencedirect.com/science/article/abs/pii/S0004370214001478",
     },
   },
   {
@@ -115,11 +115,11 @@ const argumentationNodes: Node[] = [
     fullName: "Ideal",
     shortLabel: "Idl",
     paper: {
-      title: "Ideal and stage semantics for argumentation frameworks",
-      authors: ["Dung, P.M.", "Mancarella, P.", "Toni, F."],
+      title: "Computing ideal sceptical argumentation",
+      authors: ["Dung, P. M.", "Mancarella, P.", "Toni, F."],
       year: 2007,
-      abstract: "The ideal extension is the maximal admissible set that is contained in every preferred extension...",
-      url: "https://www.sciencedirect.com/science/article/pii/S0004370206001543",
+      abstract: "Computational methods for ideal sceptical argumentation and its relationship to other semantics...",
+      url: "https://www.sciencedirect.com/science/article/abs/pii/S0004370207000644",
     },
   },
   {
@@ -169,12 +169,12 @@ const argumentationNodes: Node[] = [
     fullName: "Eager",
     shortLabel: "Egr",
     paper: {
-      title: "Eager semantics for argumentation frameworks",
+      title: "Comparing two unique extension semantics for formal argumentation: ideal and eager",
       authors: ["Caminada, M."],
       year: 2007,
       abstract:
-        "Eager semantics is defined as the maximal complete extension that is contained in every semi-stable extension...",
-      url: "https://link.springer.com/chapter/10.1007/978-3-540-74565-5_7",
+        "A comparison of ideal and eager semantics for formal argumentation frameworks...",
+      url: "https://dspace.library.uu.nl/handle/1874/30000",
     },
   },
   {
@@ -238,9 +238,11 @@ const getDefinition = (nodeId: string): string => {
 
 export default function MermaidArgumentationGraph() {
   const [selectedNode, setSelectedNode] = useState<string | null>(null)
-  const [hoveredNode, setHoveredNode] = useState<string | null>(null)
   const mermaidRef = useRef<HTMLDivElement>(null)
   const [zoomLevel, setZoomLevel] = useState(1)
+  const [isDragging, setIsDragging] = useState(false)
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
+  const [panOffset, setPanOffset] = useState({ x: 0, y: 0 })
 
   // Generate Mermaid diagram syntax
   const generateMermaidDiagram = () => {
@@ -273,7 +275,6 @@ export default function MermaidArgumentationGraph() {
     argumentationNodes.forEach((node, index) => {
       const nodeId = node.id.replace(/-/g, "_")
       const isSelected = selectedNode === node.id
-      const isHovered = hoveredNode === node.id
 
       let fillColor = "#ffffff"
       let strokeColor = "#333333"
@@ -281,12 +282,9 @@ export default function MermaidArgumentationGraph() {
       const textColor = "#000000"
 
       if (isSelected) {
+        fillColor = "#dbeafe" // Light blue background
         strokeColor = "#3b82f6"
         strokeWidth = "3px"
-      } else if (isHovered) {
-        fillColor = "#f8fafc"
-        strokeColor = "#6366f1"
-        strokeWidth = "2px"
       }
 
       diagram += `    classDef node${index} fill:${fillColor},stroke:${strokeColor},stroke-width:${strokeWidth},color:${textColor},cursor:pointer\n`
@@ -310,6 +308,7 @@ export default function MermaidArgumentationGraph() {
 
   const handleFitToWindow = () => {
     setZoomLevel(1)
+    setPanOffset({ x: 0, y: 0 })
     applyZoom(1)
   }
 
@@ -319,11 +318,50 @@ export default function MermaidArgumentationGraph() {
       if (svg) {
         const g = svg.querySelector("g")
         if (g) {
-          g.style.transform = `scale(${zoom})`
+          g.style.transform = `scale(${zoom}) translate(${panOffset.x}px, ${panOffset.y}px)`
           g.style.transformOrigin = "center center"
         }
       }
     }
+  }
+
+  const applyPan = (offset: { x: number; y: number }) => {
+    if (mermaidRef.current) {
+      const svg = mermaidRef.current.querySelector("svg")
+      if (svg) {
+        const g = svg.querySelector("g")
+        if (g) {
+          g.style.transform = `scale(${zoomLevel}) translate(${offset.x}px, ${offset.y}px)`
+          g.style.transformOrigin = "center center"
+        }
+      }
+    }
+  }
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (e.button === 0) { // Left mouse button only
+      setIsDragging(true)
+      setDragStart({ x: e.clientX - panOffset.x, y: e.clientY - panOffset.y })
+    }
+  }
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (isDragging) {
+      const newOffset = {
+        x: e.clientX - dragStart.x,
+        y: e.clientY - dragStart.y
+      }
+      setPanOffset(newOffset)
+      applyPan(newOffset)
+    }
+  }
+
+  const handleMouseUp = () => {
+    setIsDragging(false)
+  }
+
+  const handleMouseLeave = () => {
+    setIsDragging(false)
   }
 
   const setupNodeInteractions = () => {
@@ -361,19 +399,12 @@ export default function MermaidArgumentationGraph() {
         console.log("Node clicked:", nodeData.id)
       })
 
-      // Add hover handlers
-      newNodeElement.addEventListener("mouseenter", () => {
-        setHoveredNode(nodeData.id)
-        ;(newNodeElement as HTMLElement).style.cursor = "pointer"
-      })
+        // Set cursor style
+        ; (newNodeElement as HTMLElement).style.cursor = "pointer"
 
-      newNodeElement.addEventListener("mouseleave", () => {
-        setHoveredNode(null)
-      })
-
-      // Make sure the element is clickable
-      ;(newNodeElement as HTMLElement).style.cursor = "pointer"
-      ;(newNodeElement as HTMLElement).style.pointerEvents = "all"
+        // Make sure the element is clickable
+        ; (newNodeElement as HTMLElement).style.cursor = "pointer"
+        ; (newNodeElement as HTMLElement).style.pointerEvents = "all"
     })
   }
 
@@ -429,7 +460,7 @@ export default function MermaidArgumentationGraph() {
           console.error("Error rendering Mermaid diagram:", error)
         })
     }
-  }, [selectedNode, hoveredNode])
+  }, [selectedNode])
 
   const clearSelection = () => {
     setSelectedNode(null)
@@ -503,38 +534,40 @@ export default function MermaidArgumentationGraph() {
                   </Button>
                 )}
 
-                {/* Fixed height graph container */}
-                <div
-                  ref={mermaidRef}
-                  className="w-full h-[600px] flex items-center justify-center bg-white rounded-lg border overflow-hidden"
-                  style={{ fontSize: "14px" }}
-                />
-              </CardContent>
+                {/* Graph container with legend */}
+                <div className="relative">
+                  {/* Fixed height graph container */}
+                  <div
+                    ref={mermaidRef}
+                    className="w-full h-[600px] flex items-center justify-center bg-white rounded-lg overflow-hidden"
+                    style={{ fontSize: "14px", cursor: isDragging ? "grabbing" : "grab" }}
+                    onMouseDown={handleMouseDown}
+                    onMouseMove={handleMouseMove}
+                    onMouseUp={handleMouseUp}
+                    onMouseLeave={handleMouseLeave}
+                  />
 
-              {/* Legend below the graph */}
-              <div className="px-4 pb-4">
-                <div className="bg-gray-50 border rounded-lg p-4">
-                  <h4 className="font-semibold text-sm text-gray-700 mb-3">Legend</h4>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="flex items-center gap-2">
-                      <div className="w-6 h-0.5 bg-gray-600"></div>
-                      <span className="text-sm text-gray-600">Direct inclusion</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-6 h-0.5 bg-gray-400 border-dashed border-t-2 border-gray-400"></div>
-                      <span className="text-sm text-gray-600">Special relationship</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-6 h-4 bg-white rounded border-2 border-blue-500"></div>
-                      <span className="text-sm text-gray-600">Selected node</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-6 h-4 bg-slate-50 rounded border-2 border-indigo-400"></div>
-                      <span className="text-sm text-gray-600">Hovered node</span>
+                  {/* Legend inside graph view */}
+                  <div className="absolute bottom-4 left-4 right-4">
+                    <div className="bg-white/95 backdrop-blur-sm border rounded-lg p-3 shadow-sm">
+                      <div className="flex items-center justify-center gap-6">
+                        <div className="flex items-center gap-2">
+                          <div className="w-6 h-0.5 bg-gray-600"></div>
+                          <span className="text-xs text-gray-600">Direct inclusion</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className="w-6 h-0.5 bg-gray-400 border-dashed border-t-2 border-gray-400"></div>
+                          <span className="text-xs text-gray-600">Subset of every target set</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className="w-6 h-4 bg-blue-100 rounded border-2 border-blue-500"></div>
+                          <span className="text-xs text-gray-600">Selected node</span>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
+              </CardContent>
             </Card>
           </div>
 
@@ -550,9 +583,7 @@ export default function MermaidArgumentationGraph() {
                   <p className="text-sm text-gray-600">
                     • <strong>Click</strong> any node to view its definition and research paper
                   </p>
-                  <p className="text-sm text-gray-600">
-                    • <strong>Hover</strong> over nodes to see visual feedback
-                  </p>
+
                   <p className="text-sm text-gray-600">
                     • Use <strong>zoom controls</strong> to navigate the diagram
                   </p>
@@ -606,6 +637,23 @@ export default function MermaidArgumentationGraph() {
                     <ExternalLink className="w-4 h-4" />
                     View Paper
                   </Button>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Encodings for Selected Node */}
+            {selectedNodeData && (
+              <Card className="border-purple-200 bg-purple-50/50">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-xl text-purple-700">
+                    <Code className="w-6 h-6" />
+                    Encodings
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-base text-gray-700">
+                    Computational encodings and algorithms for {selectedNodeData.fullName.toLowerCase()} semantics.
+                  </p>
                 </CardContent>
               </Card>
             )}
