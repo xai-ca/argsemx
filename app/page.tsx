@@ -3,7 +3,8 @@
 import { useState, useEffect, useRef } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { X, ExternalLink, BookOpen, FileText, ZoomIn, ZoomOut, Maximize2, Code, Github } from "lucide-react"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { X, ExternalLink, BookOpen, FileText, ZoomIn, ZoomOut, Maximize2, Code, Github, Download } from "lucide-react"
 import mermaid from "mermaid"
 import 'katex/dist/katex.min.css'
 import { InlineMath } from 'react-katex'
@@ -141,7 +142,6 @@ const argumentationNodes: Node[] = [
       }
     ],
     encodings: [
-      { label: "DLV", url: "https://www.dbai.tuwien.ac.at/research/argumentation/aspartix/dung/semi_stable.dl" },
       { label: "Clingo", url: "https://www.dbai.tuwien.ac.at/research/argumentation/aspartix/dung/semi_stable_gringo.lp" }
     ]
   },
@@ -297,10 +297,30 @@ const downloadFile = async (url: string, filename: string) => {
   }
 }
 
-function renderDefinition(def) {
+// Map external URLs to local file paths
+const getLocalFilePath = (url: string): string => {
+  const urlMap: { [key: string]: string } = {
+    'https://www.dbai.tuwien.ac.at/research/argumentation/aspartix/dung/adm.dl': 'adm.dl',
+    'https://www.dbai.tuwien.ac.at/research/argumentation/aspartix/dung/comp.dl': 'comp.dl',
+    'https://www.dbai.tuwien.ac.at/research/argumentation/aspartix/dung/ground.dl': 'ground.dl',
+    'https://www.dbai.tuwien.ac.at/research/argumentation/aspartix/dung/prefexDLV.dl': 'preferred_dlv.dl',
+    'https://www.dbai.tuwien.ac.at/research/argumentation/aspartix/dung/prefex_gringo.lp': 'preferred_clingo.lp',
+    'https://www.dbai.tuwien.ac.at/research/argumentation/aspartix/dung/semi_stable.dl': 'semi_stable_dlv.dl',
+    'https://www.dbai.tuwien.ac.at/research/argumentation/aspartix/dung/semi_stable_gringo.lp': 'semi_stable_clingo.lp',
+    'https://www.dbai.tuwien.ac.at/research/argumentation/aspartix/dung/ideal.dl': 'ideal.dl',
+    'https://www.dbai.tuwien.ac.at/research/argumentation/aspartix/dung/str_adm.lp': 'str_adm_clingo.lp',
+    'https://www.dbai.tuwien.ac.at/research/argumentation/aspartix/dung/naive.dl': 'naive.dl',
+    'https://www.dbai.tuwien.ac.at/research/argumentation/aspartix/dung/stable.dl': 'stable.dl',
+    'https://www.dbai.tuwien.ac.at/research/argumentation/aspartix/dung/stage.dl': 'stage_dlv.dl',
+    'https://www.dbai.tuwien.ac.at/research/argumentation/aspartix/dung/stage_gringo.lp': 'stage_clingo.dl',
+  }
+  return urlMap[url] || url
+}
+
+function renderDefinition(def: string) {
   // Split on $...$ and alternate between text and math
   const parts = def.split(/(\$[^$]+\$)/g);
-  return parts.map((part, i) =>
+  return parts.map((part: string, i: number) =>
     part.startsWith('$') && part.endsWith('$') ? (
       <InlineMath key={i} math={part.slice(1, -1)} />
     ) : (
@@ -309,8 +329,88 @@ function renderDefinition(def) {
   );
 }
 
+// Custom Prolog syntax highlighting
+const highlightProlog = (code: string) => {
+  // Escape HTML to prevent injection
+  let highlightedCode = code
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+
+  // Use a token-based approach to avoid overlapping matches
+  const tokens: Array<{ text: string; type: string }> = [];
+  let currentText = highlightedCode;
+
+  // Extract comments first
+  currentText = currentText.replace(/(%.*$)/gm, (match) => {
+    tokens.push({ text: match, type: 'comment' });
+    return `__TOKEN_${tokens.length - 1}__`;
+  });
+
+  // Extract keywords
+  currentText = currentText.replace(/\b(in|out|defeated|not_defended|arg|att|fixedPoint)\b/g, (match) => {
+    tokens.push({ text: match, type: 'keyword' });
+    return `__TOKEN_${tokens.length - 1}__`;
+  });
+
+  // Extract negation and rules
+  currentText = currentText.replace(/\b(not|:-)\b/g, (match) => {
+    tokens.push({ text: match, type: 'negation' });
+    return `__TOKEN_${tokens.length - 1}__`;
+  });
+
+  // Extract variables
+  currentText = currentText.replace(/\b([A-Z][a-zA-Z0-9_]*)\b/g, (match) => {
+    tokens.push({ text: match, type: 'variable' });
+    return `__TOKEN_${tokens.length - 1}__`;
+  });
+
+  // Extract numbers
+  currentText = currentText.replace(/\b(\d+)\b/g, (match) => {
+    tokens.push({ text: match, type: 'number' });
+    return `__TOKEN_${tokens.length - 1}__`;
+  });
+
+  // Extract punctuation
+  currentText = currentText.replace(/([:\-.,(){};!\-])/g, (match) => {
+    tokens.push({ text: match, type: 'punctuation' });
+    return `__TOKEN_${tokens.length - 1}__`;
+  });
+
+  // Replace tokens with styled spans
+  tokens.forEach((token, index) => {
+    let className = '';
+    switch (token.type) {
+      case 'comment':
+        className = 'text-gray-500 italic';
+        break;
+      case 'keyword':
+        className = 'text-green-600 font-semibold';
+        break;
+      case 'negation':
+        className = 'text-red-600 font-bold';
+        break;
+      case 'variable':
+        className = 'text-purple-600 font-semibold';
+        break;
+      case 'number':
+        className = 'text-blue-500';
+        break;
+      case 'punctuation':
+        className = 'text-blue-600 font-bold';
+        break;
+    }
+    currentText = currentText.replace(`__TOKEN_${index}__`, `<span class="${className}">${token.text}</span>`);
+  });
+
+  return currentText;
+}
+
 export default function MermaidArgumentationGraph() {
   const [selectedNode, setSelectedNode] = useState<string | null>(null)
+  const [encodingDialogOpen, setEncodingDialogOpen] = useState(false)
+  const [encodingContent, setEncodingContent] = useState<string>('')
+  const [encodingTitle, setEncodingTitle] = useState<string>('')
   const mermaidRef = useRef<HTMLDivElement>(null)
   const [zoomLevel, setZoomLevel] = useState(1)
   const [isDragging, setIsDragging] = useState(false)
@@ -505,7 +605,7 @@ export default function MermaidArgumentationGraph() {
         padding: 20,
       },
       fontFamily: "Arial, sans-serif",
-      fontSize: "14px",
+      fontSize: 14,
     })
 
     if (mermaidRef.current) {
@@ -526,7 +626,7 @@ export default function MermaidArgumentationGraph() {
             setTimeout(() => {
               setupNodeInteractions()
               applyZoom(zoomLevel)
-            }, 200)
+            }, 200 as number)
           }
         })
         .catch((error) => {
@@ -537,6 +637,38 @@ export default function MermaidArgumentationGraph() {
 
   const clearSelection = () => {
     setSelectedNode(null)
+  }
+
+  const handleEncodingClick = async (encoding: Encoding) => {
+    try {
+      const localFilePath = getLocalFilePath(encoding.url)
+      const response = await fetch(`/api/encodings/${localFilePath}`)
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch encoding file')
+      }
+
+      const content = await response.text()
+      setEncodingContent(content)
+      setEncodingTitle(`${encoding.label} Encoding`)
+      setEncodingDialogOpen(true)
+    } catch (error) {
+      console.error('Error fetching encoding:', error)
+      // Fallback to original download behavior
+      downloadFile(encoding.url, encoding.label.replace(/\s/g, '').toLowerCase() + '.dl')
+    }
+  }
+
+  const handleDownloadEncoding = () => {
+    const blob = new Blob([encodingContent], { type: 'text/plain' })
+    const url = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `${encodingTitle.toLowerCase().replace(/\s/g, '_')}.dl`
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    window.URL.revokeObjectURL(url)
   }
 
   const selectedNodeData = selectedNode ? argumentationNodes.find((n) => n.id === selectedNode) : null
@@ -746,7 +878,7 @@ export default function MermaidArgumentationGraph() {
                             variant="outline"
                             size="sm"
                             className="flex items-center gap-2 bg-transparent hover:bg-purple-100 flex-1"
-                            onClick={() => downloadFile(encoding.url, encoding.label.replace(/\s/g, '').toLowerCase() + '.dl')}
+                            onClick={() => handleEncodingClick(encoding)}
                           >
                             <ExternalLink className="w-4 h-4" />
                             {encoding.label}
@@ -769,6 +901,35 @@ export default function MermaidArgumentationGraph() {
             )}
           </div>
         </div>
+
+        {/* Encoding Dialog */}
+        <Dialog open={encodingDialogOpen} onOpenChange={setEncodingDialogOpen}>
+          <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Code className="w-5 h-5" />
+                {encodingTitle}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleDownloadEncoding}
+                  className="flex items-center gap-2 ml-2"
+                >
+                  <Download className="w-4 h-4" />
+                  Download
+                </Button>
+              </DialogTitle>
+            </DialogHeader>
+            <div className="mt-4">
+              <div className="bg-gray-50 rounded-lg p-4 max-h-[60vh] overflow-y-auto">
+                <div
+                  className="text-sm font-mono text-gray-800 whitespace-pre-wrap break-words bg-gray-100 p-4 rounded border"
+                  dangerouslySetInnerHTML={{ __html: highlightProlog(encodingContent) }}
+                />
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   )
