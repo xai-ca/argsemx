@@ -1,9 +1,9 @@
 "use client"
 
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { X, ExternalLink, BookOpen, Code, ArrowRight } from "lucide-react"
+import { X, ExternalLink, BookOpen, Code, ArrowRight, FileText } from "lucide-react"
 
 interface Node {
   id: string
@@ -28,14 +28,21 @@ interface Edge {
   label?: string
 }
 
+const SCALE = 1.4; // Increase this value for more spacing
+const OFFSET_X = 100;
+const OFFSET_Y = 80;
+const SVG_WIDTH = 1400;
+const SVG_HEIGHT = 1100;
+const INIT_VIEWBOX = { x: 0, y: 0, width: SVG_WIDTH, height: SVG_HEIGHT };
+
 const argumentationNodes: Node[] = [
   {
     id: "naive",
-    label: "Naive Extensions (Nav)",
-    fullName: "Naive Extensions",
+    label: "Naive (Nav)",
+    fullName: "Naive",
     shortLabel: "Nav",
-    x: 400,
-    y: 50,
+    x: 400 * SCALE + OFFSET_X,
+    y: 50 * SCALE + OFFSET_Y,
     color: "#e9d5ff",
     paper: {
       title:
@@ -49,11 +56,11 @@ const argumentationNodes: Node[] = [
   },
   {
     id: "conflict-free",
-    label: "Conflict-Free Extensions (Cf)",
-    fullName: "Conflict-Free Extensions",
+    label: "Conflict-Free (Cf)",
+    fullName: "Conflict-Free",
     shortLabel: "Cf",
-    x: 200,
-    y: 150,
+    x: 200 * SCALE + OFFSET_X,
+    y: 150 * SCALE + OFFSET_Y,
     color: "#f3f4f6",
     paper: {
       title:
@@ -66,11 +73,11 @@ const argumentationNodes: Node[] = [
   },
   {
     id: "stage",
-    label: "Stage Extensions (Stg)",
-    fullName: "Stage Extensions",
+    label: "Stage (Stg)",
+    fullName: "Stage",
     shortLabel: "Stg",
-    x: 600,
-    y: 150,
+    x: 600 * SCALE + OFFSET_X,
+    y: 150 * SCALE + OFFSET_Y,
     color: "#bfdbfe",
     paper: {
       title: "Ideal and stage semantics for argumentation frameworks",
@@ -82,11 +89,11 @@ const argumentationNodes: Node[] = [
   },
   {
     id: "admissible",
-    label: "Admissible Extensions (Adm)",
-    fullName: "Admissible Extensions",
+    label: "Admissible (Adm)",
+    fullName: "Admissible",
     shortLabel: "Adm",
-    x: 200,
-    y: 250,
+    x: 200 * SCALE + OFFSET_X,
+    y: 250 * SCALE + OFFSET_Y,
     color: "#f3f4f6",
     paper: {
       title:
@@ -99,11 +106,11 @@ const argumentationNodes: Node[] = [
   },
   {
     id: "complete",
-    label: "Complete Extensions (Cmp)",
-    fullName: "Complete Extensions",
+    label: "Complete (Cmp)",
+    fullName: "Complete",
     shortLabel: "Cmp",
-    x: 200,
-    y: 350,
+    x: 200 * SCALE + OFFSET_X,
+    y: 350 * SCALE + OFFSET_Y,
     color: "#f3f4f6",
     paper: {
       title:
@@ -116,11 +123,11 @@ const argumentationNodes: Node[] = [
   },
   {
     id: "ideal",
-    label: "Ideal Extensions (Idl)",
-    fullName: "Ideal Extensions",
+    label: "Ideal (Idl)",
+    fullName: "Ideal",
     shortLabel: "Idl",
-    x: 350,
-    y: 350,
+    x: 350 * SCALE + OFFSET_X,
+    y: 350 * SCALE + OFFSET_Y,
     color: "#bbf7d0",
     paper: {
       title: "Ideal and stage semantics for argumentation frameworks",
@@ -132,11 +139,11 @@ const argumentationNodes: Node[] = [
   },
   {
     id: "eager",
-    label: "Eager Extensions (Egr)",
-    fullName: "Eager Extensions",
+    label: "Eager (Egr)",
+    fullName: "Eager",
     shortLabel: "Egr",
-    x: 500,
-    y: 350,
+    x: 500 * SCALE + OFFSET_X,
+    y: 350 * SCALE + OFFSET_Y,
     color: "#bfdbfe",
     paper: {
       title: "Eager semantics for argumentation frameworks",
@@ -149,11 +156,11 @@ const argumentationNodes: Node[] = [
   },
   {
     id: "strongly-admissible",
-    label: "Strongly Admissible Extensions (Str)",
-    fullName: "Strongly Admissible Extensions",
+    label: "Strongly Admissible (Str)",
+    fullName: "Strongly Admissible",
     shortLabel: "Str",
-    x: 650,
-    y: 350,
+    x: 650 * SCALE + OFFSET_X,
+    y: 350 * SCALE + OFFSET_Y,
     color: "#fef3c7",
     paper: {
       title: "Strong admissibility revisited",
@@ -165,11 +172,11 @@ const argumentationNodes: Node[] = [
   },
   {
     id: "grounded",
-    label: "Grounded Extensions (Grd)",
-    fullName: "Grounded Extensions",
+    label: "Grounded (Grd)",
+    fullName: "Grounded",
     shortLabel: "Grd",
-    x: 100,
-    y: 450,
+    x: 100 * SCALE + OFFSET_X,
+    y: 450 * SCALE + OFFSET_Y,
     color: "#f3f4f6",
     paper: {
       title:
@@ -182,11 +189,11 @@ const argumentationNodes: Node[] = [
   },
   {
     id: "preferred",
-    label: "Preferred Extensions (Prf)",
-    fullName: "Preferred Extensions",
+    label: "Preferred (Prf)",
+    fullName: "Preferred",
     shortLabel: "Prf",
-    x: 300,
-    y: 450,
+    x: 300 * SCALE + OFFSET_X,
+    y: 450 * SCALE + OFFSET_Y,
     color: "#f3f4f6",
     paper: {
       title:
@@ -199,11 +206,11 @@ const argumentationNodes: Node[] = [
   },
   {
     id: "semi-stable",
-    label: "Semi-Stable Extensions (Sstb)",
-    fullName: "Semi-Stable Extensions",
+    label: "Semi-Stable (Sstb)",
+    fullName: "Semi-Stable",
     shortLabel: "Sstb",
-    x: 400,
-    y: 550,
+    x: 400 * SCALE + OFFSET_X,
+    y: 550 * SCALE + OFFSET_Y,
     color: "#bfdbfe",
     paper: {
       title: "Semi-stable semantics",
@@ -215,11 +222,11 @@ const argumentationNodes: Node[] = [
   },
   {
     id: "stable",
-    label: "Stable Extensions (Stb)",
-    fullName: "Stable Extensions",
+    label: "Stable (Stb)",
+    fullName: "Stable",
     shortLabel: "Stb",
-    x: 400,
-    y: 650,
+    x: 400 * SCALE + OFFSET_X,
+    y: 650 * SCALE + OFFSET_Y,
     color: "#f3f4f6",
     paper: {
       title:
@@ -510,6 +517,70 @@ export default function InteractiveGraph() {
   const [selectedEdge, setSelectedEdge] = useState<Edge | null>(null)
   const svgRef = useRef<SVGSVGElement>(null)
 
+  // Zoom and pan state
+  const [viewBox, setViewBox] = useState(INIT_VIEWBOX)
+  const [isPanning, setIsPanning] = useState(false)
+  const panStart = useRef<{ x: number; y: number } | null>(null)
+  const viewBoxStart = useRef<{ x: number; y: number; width: number; height: number }>(INIT_VIEWBOX)
+
+  // Fit graph to view on mount
+  useEffect(() => {
+    setViewBox(INIT_VIEWBOX)
+  }, [])
+
+  // Mouse wheel for zoom
+  const handleWheel = (e: React.WheelEvent<SVGSVGElement>) => {
+    e.preventDefault()
+    const scaleAmount = 1.1
+    let { x, y, width, height } = viewBox
+    const svgRect = svgRef.current?.getBoundingClientRect()
+    if (!svgRect) return
+    // Mouse position relative to SVG
+    const mouseX = e.clientX - svgRect.left
+    const mouseY = e.clientY - svgRect.top
+    const svgX = x + (mouseX / svgRect.width) * width
+    const svgY = y + (mouseY / svgRect.height) * height
+    // Zoom in or out
+    if (e.deltaY < 0) {
+      // Zoom in
+      width /= scaleAmount
+      height /= scaleAmount
+      x = svgX - ((svgX - x) / scaleAmount)
+      y = svgY - ((svgY - y) / scaleAmount)
+    } else {
+      // Zoom out
+      width *= scaleAmount
+      height *= scaleAmount
+      x = svgX - ((svgX - x) * scaleAmount)
+      y = svgY - ((svgY - y) * scaleAmount)
+    }
+    setViewBox({ x, y, width, height })
+  }
+
+  // Mouse down for pan
+  const handleMouseDown = (e: React.MouseEvent<SVGSVGElement>) => {
+    setIsPanning(true)
+    panStart.current = { x: e.clientX, y: e.clientY }
+    viewBoxStart.current = { ...viewBox }
+  }
+  // Mouse move for pan
+  const handleMouseMove = (e: React.MouseEvent<SVGSVGElement>) => {
+    if (!isPanning || !panStart.current) return
+    const dx = ((e.clientX - panStart.current.x) / (svgRef.current?.clientWidth || 1)) * viewBox.width
+    const dy = ((e.clientY - panStart.current.y) / (svgRef.current?.clientHeight || 1)) * viewBox.height
+    setViewBox((prev) => ({ ...prev, x: viewBoxStart.current.x - dx, y: viewBoxStart.current.y - dy }))
+  }
+  // Mouse up to stop pan
+  const handleMouseUp = () => {
+    setIsPanning(false)
+    panStart.current = null
+  }
+  // Mouse leave to stop pan
+  const handleMouseLeave = () => {
+    setIsPanning(false)
+    panStart.current = null
+  }
+
   const handleNodeClick = (node: Node) => {
     setSelectedNode(node.id)
     setSelectedEdge(null)
@@ -528,14 +599,14 @@ export default function InteractiveGraph() {
   const selectedNodeData = selectedNode ? argumentationNodes.find((n) => n.id === selectedNode) : null
   const selectedEdgeNodes = selectedEdge
     ? {
-        source: argumentationNodes.find((n) => n.id === selectedEdge.source),
-        target: argumentationNodes.find((n) => n.id === selectedEdge.target),
-      }
+      source: argumentationNodes.find((n) => n.id === selectedEdge.source),
+      target: argumentationNodes.find((n) => n.id === selectedEdge.target),
+    }
     : null
 
   const edgeExample = selectedEdge
     ? minimalExamples[`${selectedEdge.source}-${selectedEdge.target}`] ||
-      minimalExamples[`${selectedEdge.target}-${selectedEdge.source}`]
+    minimalExamples[`${selectedEdge.target}-${selectedEdge.source}`]
     : null
 
   return (
@@ -563,7 +634,19 @@ export default function InteractiveGraph() {
                   </Button>
                 )}
 
-                <svg ref={svgRef} width="100%" height="100%" viewBox="0 0 800 750" className="border rounded-lg">
+                <svg
+                  ref={svgRef}
+                  width="100%"
+                  height="100%"
+                  viewBox={`${viewBox.x} ${viewBox.y} ${viewBox.width} ${viewBox.height}`}
+                  className="border rounded-lg"
+                  style={{ cursor: isPanning ? 'grabbing' : 'grab', userSelect: 'none' }}
+                  onWheel={handleWheel}
+                  onMouseDown={handleMouseDown}
+                  onMouseMove={handleMouseMove}
+                  onMouseUp={handleMouseUp}
+                  onMouseLeave={handleMouseLeave}
+                >
                   {/* Edges */}
                   {argumentationEdges.map((edge, index) => {
                     const sourceNode = argumentationNodes.find((n) => n.id === edge.source)
@@ -676,13 +759,13 @@ export default function InteractiveGraph() {
             {selectedNodeData && (
               <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-lg">
-                    <BookOpen className="w-5 h-5" />
+                  <CardTitle className="flex items-center gap-2 text-xl">
+                    <FileText className="w-6 h-6" />
                     Definition
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-sm text-gray-700">{getDefinition(selectedNodeData.id)}</p>
+                  <p className="text-base text-gray-700">{getDefinition(selectedNodeData.id)}</p>
                 </CardContent>
               </Card>
             )}
@@ -717,19 +800,17 @@ export default function InteractiveGraph() {
             {selectedNodeData && (
               <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <BookOpen className="w-5 h-5" />
+                  <CardTitle className="flex items-center gap-2 text-xl">
+                    <BookOpen className="w-6 h-6" />
                     Paper Details
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <div>
-                    <h3 className="font-medium text-base">{selectedNodeData.paper.title}</h3>
-                    <p className="text-sm text-gray-600">
-                      {selectedNodeData.paper.authors.join(", ")} ({selectedNodeData.paper.year})
+                    <p className="text-base text-gray-700">
+                      {selectedNodeData.paper.authors.join(", ")}. ({selectedNodeData.paper.year}). <i>{selectedNodeData.paper.title}</i>.
                     </p>
                   </div>
-                  <p className="text-sm text-gray-700">{selectedNodeData.paper.abstract}</p>
                   <Button
                     variant="outline"
                     size="sm"

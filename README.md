@@ -1,30 +1,47 @@
-# Interactive graphviz website
+# Argumentation Framework Visualization
 
-*Automatically synced with your [v0.dev](https://v0.dev) deployments*
+Interactive web application for visualizing argumentation framework extensions.
 
-[![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com/yilinxias-projects/v0-interactive-graphviz-website)
-[![Built with v0](https://img.shields.io/badge/Built%20with-v0.dev-black?style=for-the-badge)](https://v0.dev/chat/projects/LlHgAcmF5nm)
+## Quick Start
 
-## Overview
+### 1. Setup Conda Environment
 
-This repository will stay in sync with your deployed chats on [v0.dev](https://v0.dev).
-Any changes you make to your deployed app will be automatically pushed to this repository from [v0.dev](https://v0.dev).
+```bash
+# Create conda environment
+conda create -n argsemx python=3.11 nodejs=18
 
-## Deployment
+# Activate environment
+conda activate argsemx
 
-Your project is live at:
+# Install pnpm
+npm install -g pnpm
+```
 
-**[https://vercel.com/yilinxias-projects/v0-interactive-graphviz-website](https://vercel.com/yilinxias-projects/v0-interactive-graphviz-website)**
+### 2. Install & Run
 
-## Build your app
+```bash
+# Clone and setup
+git clone <repository-url>
+cd argsemx
 
-Continue building your app on:
+# Install dependencies
+pnpm install
 
-**[https://v0.dev/chat/projects/LlHgAcmF5nm](https://v0.dev/chat/projects/LlHgAcmF5nm)**
+# Start development server
+pnpm dev
+```
 
-## How It Works
+Visit [http://localhost:3000](http://localhost:3000)
 
-1. Create and modify your project using [v0.dev](https://v0.dev)
-2. Deploy your chats from the v0 interface
-3. Changes are automatically pushed to this repository
-4. Vercel deploys the latest version from this repository
+## Available Commands
+
+- `pnpm dev` - Development server with hot reload
+- `pnpm build` - Production build
+- `pnpm start` - Production server
+
+## Tech Stack
+
+- Next.js 15 + React 19
+- TypeScript
+- Tailwind CSS
+- shadcn/ui components
