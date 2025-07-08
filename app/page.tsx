@@ -413,9 +413,6 @@ export default function MermaidArgumentationGraph() {
   const [encodingTitle, setEncodingTitle] = useState<string>('')
   const mermaidRef = useRef<HTMLDivElement>(null)
   const [zoomLevel, setZoomLevel] = useState(1)
-  const [isDragging, setIsDragging] = useState(false)
-  const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
-  const [panOffset, setPanOffset] = useState({ x: 0, y: 0 })
 
   // Generate Mermaid diagram syntax
   const generateMermaidDiagram = () => {
@@ -464,6 +461,23 @@ export default function MermaidArgumentationGraph() {
       diagram += `    class ${nodeId} node${index}\n`
     })
 
+    // Add custom styling for dashed lines
+    diagram += `\n    %% Custom styling for dashed lines\n`
+    diagram += `    linkStyle default stroke:#333333,stroke-width:2px\n`
+    diagram += `    linkStyle 0 stroke:#333333,stroke-width:2px\n`
+    diagram += `    linkStyle 1 stroke:#333333,stroke-width:2px\n`
+    diagram += `    linkStyle 2 stroke:#333333,stroke-width:2px\n`
+    diagram += `    linkStyle 3 stroke:#333333,stroke-width:2px\n`
+    diagram += `    linkStyle 4 stroke:#333333,stroke-width:2px\n`
+    diagram += `    linkStyle 5 stroke:#333333,stroke-width:2px\n`
+    diagram += `    linkStyle 6 stroke:#333333,stroke-width:2px\n`
+    diagram += `    linkStyle 7 stroke:#333333,stroke-width:2px\n`
+    diagram += `    linkStyle 8 stroke:#333333,stroke-width:2px\n`
+    diagram += `    linkStyle 9 stroke:#333333,stroke-width:2px\n`
+    diagram += `    linkStyle 10 stroke:#333333,stroke-width:2px\n`
+    diagram += `    linkStyle 11 stroke:#666666,stroke-width:4px,stroke-dasharray:8,8\n`
+    diagram += `    linkStyle 12 stroke:#666666,stroke-width:4px,stroke-dasharray:8,8\n`
+
     return diagram
   }
 
@@ -481,7 +495,6 @@ export default function MermaidArgumentationGraph() {
 
   const handleFitToWindow = () => {
     setZoomLevel(1)
-    setPanOffset({ x: 0, y: 0 })
     applyZoom(1)
   }
 
@@ -491,50 +504,11 @@ export default function MermaidArgumentationGraph() {
       if (svg) {
         const g = svg.querySelector("g")
         if (g) {
-          g.style.transform = `scale(${zoom}) translate(${panOffset.x}px, ${panOffset.y}px)`
+          g.style.transform = `scale(${zoom})`
           g.style.transformOrigin = "center center"
         }
       }
     }
-  }
-
-  const applyPan = (offset: { x: number; y: number }) => {
-    if (mermaidRef.current) {
-      const svg = mermaidRef.current.querySelector("svg")
-      if (svg) {
-        const g = svg.querySelector("g")
-        if (g) {
-          g.style.transform = `scale(${zoomLevel}) translate(${offset.x}px, ${offset.y}px)`
-          g.style.transformOrigin = "center center"
-        }
-      }
-    }
-  }
-
-  const handleMouseDown = (e: React.MouseEvent) => {
-    if (e.button === 0) { // Left mouse button only
-      setIsDragging(true)
-      setDragStart({ x: e.clientX - panOffset.x, y: e.clientY - panOffset.y })
-    }
-  }
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (isDragging) {
-      const newOffset = {
-        x: e.clientX - dragStart.x,
-        y: e.clientY - dragStart.y
-      }
-      setPanOffset(newOffset)
-      applyPan(newOffset)
-    }
-  }
-
-  const handleMouseUp = () => {
-    setIsDragging(false)
-  }
-
-  const handleMouseLeave = () => {
-    setIsDragging(false)
   }
 
   const setupNodeInteractions = () => {
@@ -700,6 +674,7 @@ export default function MermaidArgumentationGraph() {
             <Card className="relative h-full">
               <CardContent className="p-4 h-full">
                 {/* Zoom Controls */}
+                {/*
                 <div className="absolute top-4 left-4 z-10 flex flex-col gap-2">
                   <Button
                     variant="outline"
@@ -729,13 +704,16 @@ export default function MermaidArgumentationGraph() {
                     <Maximize2 className="w-4 h-4" />
                   </Button>
                 </div>
+                */}
 
                 {/* Zoom Level Indicator */}
+                {/*
                 <div className="absolute top-4 left-20 z-10">
                   <div className="bg-white/90 backdrop-blur-sm border shadow-sm rounded px-2 py-1 text-xs font-medium">
                     {Math.round(zoomLevel * 100)}%
                   </div>
                 </div>
+                */}
 
                 {/* Clear Selection Button */}
                 {selectedNode && (
@@ -755,11 +733,8 @@ export default function MermaidArgumentationGraph() {
                   <div
                     ref={mermaidRef}
                     className="w-full h-full flex items-center justify-center bg-white rounded-lg overflow-hidden"
-                    style={{ fontSize: "14px", cursor: isDragging ? "grabbing" : "grab" }}
-                    onMouseDown={handleMouseDown}
-                    onMouseMove={handleMouseMove}
-                    onMouseUp={handleMouseUp}
-                    onMouseLeave={handleMouseLeave}
+                    style={{ fontSize: "14px", cursor: "pointer" }}
+                  // Removed onMouseDown, onMouseMove, onMouseUp, onMouseLeave to disable panning
                   />
 
                   {/* Legend at the very bottom of graph view */}
@@ -771,7 +746,7 @@ export default function MermaidArgumentationGraph() {
                           <span className="text-xs text-gray-600">Direct inclusion</span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <div className="w-6 h-0.5 bg-gray-400 border-dashed border-t-2 border-gray-400"></div>
+                          <div className="w-6 h-1 bg-gray-600" style={{ background: 'repeating-linear-gradient(to right, #666666 0px, #666666 8px, transparent 8px, transparent 16px)' }}></div>
                           <span className="text-xs text-gray-600">Subset of every target set</span>
                         </div>
                         <div className="flex items-center gap-2">
