@@ -677,7 +677,7 @@ export default function MermaidArgumentationGraph() {
     <div className="h-screen bg-gray-50 p-4">
       <div className="h-full max-w-full mx-auto">
         <div className="mb-4 flex items-center gap-3">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Argumentation Semantics Explorer</h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">ArgSemx: Abstract Argumentation Framework Semantics Explorer</h1>
           <a
             href="https://github.com/yilinxia/argsemx"
             target="_blank"
