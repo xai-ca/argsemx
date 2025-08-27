@@ -8,8 +8,8 @@ ArgSemX (Argumentation Semantics Explorer), an interactive web app for exploring
 
 ```bash
 # Clone the repository
- git clone https://github.com/yilinxia/argsemx.git
- cd argsemx
+git clone https://github.com/yilinxia/argsemx.git
+cd argsemx
 
 # Install dependencies
 pnpm install
@@ -32,4 +32,4 @@ Visit [http://localhost:3000](http://localhost:3000) in your browser.
 
 ---
 
-For question, please [create issue](https://github.com/yilinxia/argsemx/issues).
+For question, please [create issue](https://github.com/xai-ca/argsemx/issues) or contact [Yilin Xia](https://yilinxia.com).
